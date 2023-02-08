@@ -64,6 +64,14 @@
             {
                 "name": "next_steps",
                 "type": "string"
+            },
+            {
+                "name": "final_outcome",
+                "type": "string"
+            },
+            {
+                "name": "feedback",
+                "type": "string"
             }
         ],
         "primaryKey": [
@@ -89,7 +97,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Bikemap",
@@ -107,7 +117,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Burmester_Audiosysteme",
@@ -125,7 +137,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Convex_Energy",
@@ -143,7 +157,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "DB",
@@ -161,7 +177,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Daedalic_Entertainment",
@@ -179,7 +197,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Focusrite",
@@ -197,7 +217,9 @@
             "date_interview1": "2023-01-31",
             "interviewers": "Andy Poole, QA Manager, and Felix Beu, QA Engineer",
             "interview_notes": "will hear back from them by Feb 6",
-            "next_steps": "followup email"
+            "next_steps": "followup email",
+            "final_outcome": "Rejected",
+            "feedback": "\"some candidates have deeper knowledge of technical acoustics\" - Toby"
         },
         {
             "company_name": "Mercedes_Benz",
@@ -215,7 +237,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Native_Instruments",
@@ -233,7 +257,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Native_Instruments",
@@ -251,7 +277,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Sennheiser",
@@ -269,7 +297,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Siemens",
@@ -287,7 +317,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "SoundCloud",
@@ -305,7 +337,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Spotify",
@@ -323,7 +357,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Teufel",
@@ -341,7 +377,9 @@
             "date_interview1": null,
             "interviewers": null,
             "interview_notes": null,
-            "next_steps": null
+            "next_steps": null,
+            "final_outcome": null,
+            "feedback": null
         },
         {
             "company_name": "Zalando",
@@ -359,7 +397,9 @@
             "date_interview1": "2023-02-02",
             "interviewers": "Kate Hockey, Talent Aquisition Partner (Recruiter)",
             "interview_notes": "2/4 interview if test passed",
-            "next_steps": "coding test, followup email"
+            "next_steps": "coding test, followup email",
+            "final_outcome": null,
+            "feedback": null
         }
     ]
 }
