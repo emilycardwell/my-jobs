@@ -396,9 +396,9 @@
             "initial_response": "Passed",
             "date_interview1": "2023-02-02",
             "interviewers": "Kate Hockey, Talent Aquisition Partner (Recruiter)",
-            "interview_notes": "2/4 interview if test passed",
-            "next_steps": "coding test, followup email",
-            "final_outcome": null,
+            "interview_notes": "given take-home test, hinted that I should do one in Java",
+            "next_steps": "coding test (finished)",
+            "final_outcome": "Waiting",
             "feedback": null
         }
     ]
