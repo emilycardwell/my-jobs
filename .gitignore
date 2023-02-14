@@ -1,0 +1,8 @@
+# Data Files
+*.json
+
+# Cached Files
+__pycache__/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
