@@ -66,6 +66,10 @@
                 "type": "string"
             },
             {
+                "name": "next_interviews",
+                "type": "string"
+            },
+            {
                 "name": "final_outcome",
                 "type": "string"
             },
@@ -98,6 +102,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -118,6 +123,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -138,6 +144,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -158,6 +165,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -178,6 +186,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -198,6 +207,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -218,6 +228,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -238,6 +249,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -258,6 +270,7 @@
             "interviewers": "Andy Poole, QA Manager, and Felix Beu, QA Engineer",
             "interview_notes": "will hear back from them by Feb 6",
             "next_steps": "followup email",
+            "next_interviews": null,
             "final_outcome": "Rejected",
             "feedback": "\"some candidates have deeper knowledge of technical acoustics\" - Toby"
         },
@@ -278,6 +291,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -298,6 +312,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -318,6 +333,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -338,6 +354,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -358,6 +375,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -378,6 +396,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -398,6 +417,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -418,6 +438,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -438,6 +459,7 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -458,6 +480,28 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
+            "final_outcome": null,
+            "feedback": null
+        },
+        {
+            "company_name": "Staffbase",
+            "date_applied": "2023-02-14",
+            "job_title": "Data Engineer",
+            "job_cat": "Data Engineer",
+            "department": null,
+            "location": "Berlin",
+            "recruiter": null,
+            "referral": null,
+            "method": "linkedin",
+            "url": "https://staffbase.com/jobs/link/6581566002?gh_jid=6581566002&gh_src=da879a052us",
+            "initial_response": "No Response",
+            "date_init_resp": null,
+            "date_interview1": null,
+            "interviewers": null,
+            "interview_notes": null,
+            "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -478,6 +522,28 @@
             "interviewers": null,
             "interview_notes": null,
             "next_steps": null,
+            "next_interviews": null,
+            "final_outcome": null,
+            "feedback": null
+        },
+        {
+            "company_name": "Ubiq",
+            "date_applied": "2023-02-14",
+            "job_title": "Data Engineer",
+            "job_cat": "Data Engineer",
+            "department": null,
+            "location": "Vienna (Remote)",
+            "recruiter": "Livia Bernat",
+            "referral": null,
+            "method": "linkedin",
+            "url": "https://join.com/companies/ubiq/7104716-data-engineer-m-f-x",
+            "initial_response": "No Response",
+            "date_init_resp": null,
+            "date_interview1": null,
+            "interviewers": null,
+            "interview_notes": null,
+            "next_steps": null,
+            "next_interviews": null,
             "final_outcome": null,
             "feedback": null
         },
@@ -498,6 +564,7 @@
             "interviewers": "Kate Hockey, Talent Aquisition Partner (Recruiter)",
             "interview_notes": "given take-home test, hinted that I should do one in Java",
             "next_steps": "coding test (finished)",
+            "next_interviews": "Passed Coding Assessment, waiting for date of 2nd interview",
             "final_outcome": "Waiting",
             "feedback": null
         }
