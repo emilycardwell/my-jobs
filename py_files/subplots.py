@@ -1,3 +1,7 @@
+
+'''
+GET ALL GRAPHS AS SUBPLOTS
+'''
 ''' IMPORTS '''
 import pandas as pd
 import numpy as np
@@ -20,15 +24,8 @@ def job_categories():
         elif 'Analyst' in cat_ser[x]:
             cat_ser[x] = 'Analyst'
 
-    sns.set_theme(style='white')
-    fig1, ax1 = plt.subplots(figsize=(6,4))
-    fig1 = sns.countplot(x=cat_ser, palette='magma')
-    ax1.set_title('Job Categories')
-    ax1.set_xlabel('Job Category')
-    plt.xticks(rotation=45)
-    plt.show(fig1)
+    return cat_ser
 
-    return fig1
 
 def initial_responses():
 
@@ -47,23 +44,8 @@ def initial_responses():
 
     r_df = pd.DataFrame(data=r_dict)
 
-    sns.set_theme(style='white')
-    r_fig, ax = plt.subplots(figsize=(6,4))
+    return r_df, u_dates, formatted_dates
 
-    r_fig = r_df.plot(
-        kind='bar',
-        colormap=sns.color_palette('viridis', as_cmap=True),
-        stacked=True,
-        xlabel='Date Applied',
-        title='Initial Responses',
-        ax=ax,
-        width=1
-    )
-
-    plt.xticks([0, len(formatted_dates)-1], [formatted_dates[0], formatted_dates[-1]], rotation='horizontal')
-    plt.show(r_fig)
-
-    return r_fig
 
 def apps_timeline():
 
@@ -97,48 +79,72 @@ def apps_timeline():
     outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
     dts_array = np.array(outcome_dts, dtype='datetime64')
 
-    x_lines = pd.date_range(
-        pd.to_datetime(dts_array[0]) - relativedelta(days=5),
-        pd.to_datetime(dts_array[-1]) + relativedelta(days=2), freq='SMS'
-    )
-    x_labes = [x.strftime('%b %-d') for x in x_lines]
+    return dts_array, immediate_rejection, rejected_post_int, no_response, waiting
+
+
+def two_by_two():
 
     sns.set_theme(style='white')
-    fig2, ax2 = plt.subplots(figsize=(12,4))
+    fig, axes = plt.subplots(2, 2, figsize=(20,10))
 
-    # cat_palette = ['black', 'crimson', 'grey', 'lightskyblue']
-    cat_palette = sns.color_palette("viridis", 8)
-    w = 1
+    cat_ser = job_categories()
+    sns.countplot(ax=axes[0, 0], x=cat_ser, palette='magma')
+    axes[0,0].set_title('Job Categories')
+    axes[0,0].set_xlabel('Job Category')
 
-    second = np.array(rejected_post_int) + np.array(immediate_rejection)
-    top = second + np.array(no_response)
-
-    fig2 = ax2.bar(
-        dts_array, immediate_rejection, width=w, label='Immediate Rejection',
-        color=cat_palette[0]
+    r_df, u_dates, formatted_dates = initial_responses()
+    r_df.plot(
+        kind='hist',
+        x=[pd.to_datetime(x) for x in u_dates],
+        colormap=sns.color_palette('viridis', as_cmap=True),
+        stacked=True,
+        xlabel='Date Applied',
+        title='Initial Responses',
+        width=1,
+        ax=axes[0,1]
     )
-    fig2 = ax2.bar(
-        dts_array, rejected_post_int, width=w, bottom=immediate_rejection,
-        label='Rejected Post-Interview', color=cat_palette[3]
-    )
-    fig2 = ax2.bar(
-        dts_array, no_response, width=w, bottom=second, label='No Response',
-        color='silver'
-    )
-    fig2 = ax2.bar(
-        dts_array, waiting, width=w, bottom=top, label='In Interviews',
-        color=cat_palette[7]
-    )
+    axes[0,1].set_xticks([pd.to_datetime(x) for x in u_dates])
+    axes[0,1].set_xticklabels(formatted_dates)
 
-    ax2.set_xticks(x_lines)
-    ax2.set_xticklabels(x_labes)
-    ax2.set_ybound(0, 7)
+    # dts_array, immediate_rejection, rejected_post_int, no_response, waiting = apps_timeline()
 
-    ax2.set_xlabel('Date Applied')
-    ax2.set_ylabel('Count')
-    ax2.set_title('Dates Applied and Outcomes of Job Applications')
-    ax2.legend(loc='upper center')
+    # cat_palette = sns.color_palette("viridis", 8)
+    # second = np.array(rejected_post_int) + np.array(immediate_rejection)
+    # top = second + np.array(no_response)
 
-    plt.show(fig2)
+    # ax3.bar(
+    #     dts_array, immediate_rejection, width=1, label='Immediate Rejection',
+    #     color=cat_palette[0]
+    # )
+    # ax3.bar(
+    #     dts_array, rejected_post_int, width=1, bottom=immediate_rejection,
+    #     label='Rejected Post-Interview', color=cat_palette[3]
+    # )
+    # ax3.bar(
+    #     dts_array, no_response, width=1, bottom=second, label='No Response',
+    #     color='silver'
+    # )
+    # ax3.bar(
+    #     dts_array, waiting, width=1, bottom=top, label='In Interviews',
+    #     color=cat_palette[7]
+    # )
 
-    return fig2
+    # x_lines = pd.date_range(
+    #     pd.to_datetime(dts_array[0]) - relativedelta(days=5),
+    #     pd.to_datetime(dts_array[-1]) + relativedelta(days=2), freq='SMS'
+    # )
+    # x_labes = [x.strftime('%b %-d') for x in x_lines]
+
+    # ax3.set_xticks(x_lines)
+    # ax3.set_xticklabels(x_labes)
+    # ax3.set_ybound(0, 7)
+
+    # ax3.set_xlabel('Date Applied')
+    # ax3.set_ylabel('Count')
+    # ax3.set_title('Dates Applied and Outcomes of Job Applications')
+    # ax3.legend(loc='upper center')
+
+    plt.xticks(rotation='horizontal')
+    plt.show()
+
+    return
