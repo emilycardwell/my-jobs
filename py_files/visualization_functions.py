@@ -1,12 +1,14 @@
 ''' IMPORTS '''
 import pandas as pd
 import numpy as np
-from datetime import datetime
 from collections import Counter
 from dateutil.relativedelta import relativedelta
 import seaborn as sns
 import matplotlib.pyplot as plt
-import matplotlib.dates as md
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_transformer
+from sklearn.impute import SimpleImputer
 
 jobs_df = pd.read_json('job_data.json', orient='table')
 
@@ -145,6 +147,34 @@ def apps_timeline():
 
 def explore_data():
 
-    fig = sns.pairplot(jobs_df)
+    X = jobs_df.loc[:][:'url'].reset_index(drop=True)
+    print(X)
+    y = jobs_df['initial_response']
+
+    cat_columns = ['job_cat', 'location']
+    bi_columns = ['department', 'recruiter', 'referral', 'method']
+
+    cat_trans = make_pipeline(
+        SimpleImputer(strategy='constant', fill_value='missing'),
+        OneHotEncoder(handle_unknown='ignore')
+    )
+
+    bi_trans = make_pipeline(
+        SimpleImputer(strategy='most_frequent'),
+        OneHotEncoder(handle_unknown='ignore')
+    )
+
+    preproc = make_column_transformer(
+        (cat_trans, cat_columns),
+        (bi_trans, bi_columns)
+    )
+
+    X_trans = pd.DataFrame(preproc.fit_transform(X))
+    print(X_trans)
+
+    fig = sns.pairplot(
+        X_trans,
+        hue = y
+    )
 
     return plt.show(fig)

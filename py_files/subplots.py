@@ -25,7 +25,7 @@ def job_categories():
         elif 'Engineer' in cat_ser[x]:
             cat_ser[x] = cat_ser[x].replace('Engineer', '')
 
-    return cat_ser
+    return cat_ser.sort_values()
 
 
 def initial_responses():
