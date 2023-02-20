@@ -9,6 +9,7 @@ from collections import Counter
 from dateutil.relativedelta import relativedelta
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gs
 
 jobs_df = pd.read_json('job_data.json', orient='table')
 
@@ -76,71 +77,103 @@ def apps_timeline():
 
     outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
     dts_array = np.array(outcome_dts, dtype='datetime64')
+    responses_df = pd.DataFrame([immediate_rejection, rejected_post_int, no_response, waiting],
+                                index=dts_array)
 
-    return dts_array, immediate_rejection, rejected_post_int, no_response, waiting
+    return responses_df
 
 
 def two_by_two():
     # set figure
     sns.set_theme(style='white')
-    fig, axes = plt.subplots(2, 2, figsize=(20,10))
+    fig = plt.figure(constrained_layout=True, figsize=(20,10))
+    spec = gs.GridSpec(ncols=2, nrows=2, figure=fig)
+    ax1 = fig.add_subplot(spec[0, 0])
+    ax2 = fig.add_subplot(spec[0, 1])
+    ax3 = fig.add_subplot(spec[1, :])
 
     # cat plot
     cat_ser = job_categories()
-    sns.countplot(ax=axes[0, 0], x=cat_ser, palette='ocean')
-    axes[0,0].set_title('Job Categories')
-    axes[0,0].set_xlabel('Category')
+    sns.countplot(ax=ax1, x=cat_ser, palette='ocean')
+    ax1.set_title('Job Categories')
+    ax1.set_xlabel('Category')
 
     # responses plot
     r_df = initial_responses()
+    r_pal = sns.color_palette('magma', 10)
     sns.countplot(
-        ax=axes[0,1],
+        ax=ax2,
         x=r_df.date_applied,
         hue=r_df.initial_response,
-        palette=['black', 'silver', 'gold']
+        palette=[r_pal[2], r_pal[5], r_pal[9]]
     )
-    axes[0,1].set_title('Initial Responses')
-    axes[0,1].set_xlabel('Date Applied')
-    axes[0,1].legend(loc=9)
+    ax2.set_title('Initial Responses')
+    ax2.set_xlabel('Date Applied')
+    ax2.legend(loc=9)
 
     # timeline
-    dts_array, immediate_rejection, rejected_post_int, no_response, waiting = apps_timeline()
+    responses_df = apps_timeline()
+    cat_pal = sns.color_palette("inferno", 10)
 
-    cat_palette = sns.color_palette("inferno", 8)
-    second = np.array(rejected_post_int) + np.array(immediate_rejection)
-    top = second + np.array(no_response)
+    second = np.array(responses_df.loc[:, 'rejected_post_int']) + \
+                np.array(responses_df.loc[:, 'immediate_rejection'])
+    top = second + np.array(responses_df.loc[:, 'no_response'])
 
-    plt.bar(
-        ax=axes[1,0:], x=immediate_rejection, width=1, label='Immediate Rejection',
-        color=cat_palette[0]
+    for responses in responses_df.columns:
+        ax3.bar(
+            x=responses_df.index,
+            height=responses_df.immediate_rejection,
+            width=1,
+            label=f'Immediate Rejection',
+            color=cat_pal[0]
+        )
+
+    ax3.bar(
+        x=responses_df.index,
+        height=responses_df.immediate_rejection,
+        width=1,
+        label='Immediate Rejection',
+        color=cat_pal[0]
     )
-    plt.bar(
-        ax=axes[1,0:], x=rejected_post_int, width=1, bottom=immediate_rejection,
-        label='Rejected Post-Interview', color=cat_palette[3]
+    ax3.bar(
+        x=dts_array,
+        height=rejected_post_int,
+        width=1,
+        bottom=immediate_rejection,
+        label='Rejected Post-Interview',
+        color=cat_pal[2]
     )
-    plt.bar(
-        ax=axes[1,0:], x=no_response, width=1, bottom=second, label='No Response',
-        color='silver'
+    ax3.bar(
+        x=dts_array,
+        height=no_response,
+        width=1,
+        bottom=second,
+        label='No Response',
+        color=cat_pal[4]
     )
-    plt.bar(
-        ax=axes[1,0:], x=waiting, width=1, bottom=top, label='In Interviews',
-        color=cat_palette[7]
+    ax3.bar(
+        x=dts_array,
+        height=waiting,
+        width=1,
+        bottom=top,
+        label='In Interviews',
+        color='yellowgreen'
     )
 
+    # x axis date labels
     x_lines = pd.date_range(
         pd.to_datetime(dts_array[0]) - relativedelta(days=5),
-        pd.to_datetime(dts_array[-1]) + relativedelta(days=2), freq='SMS'
+        pd.to_datetime(dts_array[-1]) + relativedelta(days=5), freq='SMS'
     )
     x_labes = [x.strftime('%b %-d') for x in x_lines]
+    ax3.set_xticks(x_lines)
+    ax3.set_xticklabels(x_labes)
+    ax3.set_ybound(0, 7)
 
-    axes[1,0:].set_xticks(x_lines)
-    axes[1,0:].set_xticklabels(x_labes)
-    axes[1,0:].set_ybound(0, 7)
-
-    axes[1,0:].set_xlabel('Date Applied')
-    axes[1,0:].set_ylabel('Count')
-    axes[1,0:].set_title('Dates Applied and Outcomes of Job Applications')
-    axes[1,0:].legend(loc='upper center')
+    ax3.set_xlabel('Date Applied')
+    ax3.set_ylabel('Count')
+    ax3.set_title('Dates Applied and Outcomes of Job Applications')
+    ax3.legend(loc=9)
 
     # plt.xticks(rotation='horizontal')
     plt.show()
