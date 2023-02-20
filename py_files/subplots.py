@@ -77,30 +77,39 @@ def apps_timeline():
 
     outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
     dts_array = np.array(outcome_dts, dtype='datetime64')
-    responses_df = pd.DataFrame([immediate_rejection, rejected_post_int, no_response, waiting],
-                                index=dts_array)
+    t_dict = {
+        'Immediate Rejection': immediate_rejection,
+        'Rejected Post-Interview': rejected_post_int,
+        'No Response': no_response,
+        'Waiting': waiting
+    }
+
+    responses_df = pd.DataFrame(data=t_dict, index=dts_array)
 
     return responses_df
 
 
 def two_by_two():
+
     # set figure
     sns.set_theme(style='white')
-    fig = plt.figure(constrained_layout=True, figsize=(20,10))
+    fig = plt.figure(constrained_layout=True, figsize=(16,10))
     spec = gs.GridSpec(ncols=2, nrows=2, figure=fig)
     ax1 = fig.add_subplot(spec[0, 0])
     ax2 = fig.add_subplot(spec[0, 1])
     ax3 = fig.add_subplot(spec[1, :])
 
+
     # cat plot
     cat_ser = job_categories()
-    sns.countplot(ax=ax1, x=cat_ser, palette='ocean')
+    sns.countplot(ax=ax1, x=cat_ser, palette=sns.color_palette('ocean', desat=.5))
     ax1.set_title('Job Categories')
     ax1.set_xlabel('Category')
 
+
     # responses plot
     r_df = initial_responses()
-    r_pal = sns.color_palette('magma', 10)
+    r_pal = sns.color_palette('inferno', 10)
     sns.countplot(
         ax=ax2,
         x=r_df.date_applied,
@@ -111,59 +120,60 @@ def two_by_two():
     ax2.set_xlabel('Date Applied')
     ax2.legend(loc=9)
 
+
     # timeline
     responses_df = apps_timeline()
     cat_pal = sns.color_palette("inferno", 10)
+    cat_pal_list = [cat_pal[1], cat_pal[4], cat_pal[8], 'yellowgreen']
+    accum = [0] * len(responses_df)
 
-    second = np.array(responses_df.loc[:, 'rejected_post_int']) + \
-                np.array(responses_df.loc[:, 'immediate_rejection'])
-    top = second + np.array(responses_df.loc[:, 'no_response'])
-
-    for responses in responses_df.columns:
+    for responses, color in zip(responses_df.columns, cat_pal_list):
         ax3.bar(
             x=responses_df.index,
-            height=responses_df.immediate_rejection,
+            height=list(responses_df[responses]),
+            bottom=accum,
             width=1,
-            label=f'Immediate Rejection',
-            color=cat_pal[0]
+            label=responses,
+            color=color
         )
+        accum += responses_df[responses]
 
-    ax3.bar(
-        x=responses_df.index,
-        height=responses_df.immediate_rejection,
-        width=1,
-        label='Immediate Rejection',
-        color=cat_pal[0]
-    )
-    ax3.bar(
-        x=dts_array,
-        height=rejected_post_int,
-        width=1,
-        bottom=immediate_rejection,
-        label='Rejected Post-Interview',
-        color=cat_pal[2]
-    )
-    ax3.bar(
-        x=dts_array,
-        height=no_response,
-        width=1,
-        bottom=second,
-        label='No Response',
-        color=cat_pal[4]
-    )
-    ax3.bar(
-        x=dts_array,
-        height=waiting,
-        width=1,
-        bottom=top,
-        label='In Interviews',
-        color='yellowgreen'
-    )
+    # ax3.bar(
+    #     x=responses_df.index,
+    #     height=responses_df.immediate_rejection,
+    #     width=1,
+    #     label='Immediate Rejection',
+    #     color=cat_pal[0]
+    # )
+    # ax3.bar(
+    #     x=dts_array,
+    #     height=rejected_post_int,
+    #     width=1,
+    #     bottom=immediate_rejection,
+    #     label='Rejected Post-Interview',
+    #     color=cat_pal[2]
+    # )
+    # ax3.bar(
+    #     x=dts_array,
+    #     height=no_response,
+    #     width=1,
+    #     bottom=second,
+    #     label='No Response',
+    #     color=cat_pal[4]
+    # )
+    # ax3.bar(
+    #     x=dts_array,
+    #     height=waiting,
+    #     width=1,
+    #     bottom=top,
+    #     label='In Interviews',
+    #     color='yellowgreen'
+    # )
 
     # x axis date labels
     x_lines = pd.date_range(
-        pd.to_datetime(dts_array[0]) - relativedelta(days=5),
-        pd.to_datetime(dts_array[-1]) + relativedelta(days=5), freq='SMS'
+        pd.to_datetime(responses_df.index[0]) - relativedelta(days=5),
+        pd.to_datetime(responses_df.index[-1]) + relativedelta(days=5), freq='SMS'
     )
     x_labes = [x.strftime('%b %-d') for x in x_lines]
     ax3.set_xticks(x_lines)
