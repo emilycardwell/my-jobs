@@ -18,10 +18,12 @@ def job_categories():
 
     cat_ser = jobs_df['job_cat'].reset_index(drop=True)
     for x in range(len(cat_ser)):
-        if 'Engineer' in cat_ser[x]:
+        if 'Data Engineer' == cat_ser[x]:
+            cat_ser[x] = 'DE'
+        elif 'Data Analyst' == cat_ser[x]:
+            cat_ser[x] = 'DA'
+        elif 'Engineer' in cat_ser[x]:
             cat_ser[x] = cat_ser[x].replace('Engineer', '')
-        elif 'Analyst' in cat_ser[x]:
-            cat_ser[x] = 'Analyst'
 
     return cat_ser
 
@@ -31,17 +33,18 @@ def initial_responses():
     X = jobs_df.loc[:, ['initial_response']].reset_index('company_name', drop=True)
     X = X.reset_index().sort_values('date_applied').reset_index(drop=True)
 
-    # gb_df = X.groupby('date_applied').value_counts().unstack(fill_value=0)
+    gb_df = X.groupby('date_applied').value_counts().unstack(fill_value=0)
 
-    u_dates = sorted(list(X.date_applied))
+    u_dates = sorted(list(set(X.date_applied)))
     formatted_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in u_dates]
 
     r_dict = {
-        'date_applied': formatted_dates,
-        'initial_response': list(X.initial_response)
+        'Rejected': list(gb_df['Rejected']),
+        'No Response': list(gb_df['No Response']),
+        'Passed': list(gb_df['Passed'])
     }
 
-    r_df = pd.DataFrame(data=r_dict)
+    r_df = pd.DataFrame(data=r_dict, index=formatted_dates)
 
     return r_df
 
@@ -77,13 +80,13 @@ def apps_timeline():
 
     outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
     dts_array = np.array(outcome_dts, dtype='datetime64')
+
     t_dict = {
         'Immediate Rejection': immediate_rejection,
         'Rejected Post-Interview': rejected_post_int,
         'No Response': no_response,
         'Waiting': waiting
     }
-
     responses_df = pd.DataFrame(data=t_dict, index=dts_array)
 
     return responses_df
@@ -102,20 +105,27 @@ def two_by_two():
 
     # cat plot
     cat_ser = job_categories()
-    sns.countplot(ax=ax1, x=cat_ser, palette=sns.color_palette('ocean', desat=.5))
+    sns.countplot(ax=ax1, x=cat_ser, palette='Blues')
     ax1.set_title('Job Categories')
     ax1.set_xlabel('Category')
 
 
     # responses plot
     r_df = initial_responses()
-    r_pal = sns.color_palette('inferno', 10)
-    sns.countplot(
-        ax=ax2,
-        x=r_df.date_applied,
-        hue=r_df.initial_response,
-        palette=[r_pal[2], r_pal[5], r_pal[9]]
-    )
+    color_list = ['black', 'silver', 'yellowgreen']
+    r_accum = [0] * len(r_df)
+
+    for resp, co in zip(r_df.columns, color_list):
+        ax2.bar(
+            x=r_df.index,
+            height=list(r_df[resp]),
+            bottom=r_accum,
+            width=.5,
+            label=resp,
+            color=co
+        )
+        r_accum += r_df[resp]
+
     ax2.set_title('Initial Responses')
     ax2.set_xlabel('Date Applied')
     ax2.legend(loc=9)
@@ -125,50 +135,18 @@ def two_by_two():
     responses_df = apps_timeline()
     cat_pal = sns.color_palette("inferno", 10)
     cat_pal_list = [cat_pal[1], cat_pal[4], cat_pal[8], 'yellowgreen']
-    accum = [0] * len(responses_df)
+    t_accum = [0] * len(responses_df)
 
     for responses, color in zip(responses_df.columns, cat_pal_list):
         ax3.bar(
             x=responses_df.index,
             height=list(responses_df[responses]),
-            bottom=accum,
+            bottom=t_accum,
             width=1,
             label=responses,
             color=color
         )
-        accum += responses_df[responses]
-
-    # ax3.bar(
-    #     x=responses_df.index,
-    #     height=responses_df.immediate_rejection,
-    #     width=1,
-    #     label='Immediate Rejection',
-    #     color=cat_pal[0]
-    # )
-    # ax3.bar(
-    #     x=dts_array,
-    #     height=rejected_post_int,
-    #     width=1,
-    #     bottom=immediate_rejection,
-    #     label='Rejected Post-Interview',
-    #     color=cat_pal[2]
-    # )
-    # ax3.bar(
-    #     x=dts_array,
-    #     height=no_response,
-    #     width=1,
-    #     bottom=second,
-    #     label='No Response',
-    #     color=cat_pal[4]
-    # )
-    # ax3.bar(
-    #     x=dts_array,
-    #     height=waiting,
-    #     width=1,
-    #     bottom=top,
-    #     label='In Interviews',
-    #     color='yellowgreen'
-    # )
+        t_accum += responses_df[responses]
 
     # x axis date labels
     x_lines = pd.date_range(

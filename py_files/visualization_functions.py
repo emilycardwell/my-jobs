@@ -142,3 +142,9 @@ def apps_timeline():
     plt.show(fig2)
 
     return fig2
+
+def explore_data():
+
+    fig = sns.pairplot(jobs_df)
+
+    return plt.show(fig)

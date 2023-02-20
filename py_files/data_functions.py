@@ -107,3 +107,8 @@ def add_to_json(new_jobs_df, show='all'):
         return jobs_df
     else:
         return jobs_df.head(show)
+
+
+def view_data():
+    jobs_df = pd.read_json('job_data.json', orient='table')
+    return jobs_df
