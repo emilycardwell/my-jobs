@@ -5,22 +5,21 @@ from collections import Counter
 from dateutil.relativedelta import relativedelta
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.pipeline import make_pipeline
-from sklearn.compose import make_column_transformer
-from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
 
 jobs_df = pd.read_json('job_data.json', orient='table')
 
+cat_ser = jobs_df['job_cat'].reset_index(drop=True)
+for x in range(len(cat_ser)):
+    if 'Data Engineer' == cat_ser[x]:
+        cat_ser[x] = 'DE'
+    elif 'Data Analyst' == cat_ser[x]:
+        cat_ser[x] = 'DA'
+    elif 'Engineer' in cat_ser[x]:
+        cat_ser[x] = cat_ser[x].replace('Engineer', '')
+
 ''' SHOWING GRAPHS '''
 def job_categories():
-
-    cat_ser = jobs_df['job_cat'].reset_index(drop=True)
-    for x in range(len(cat_ser)):
-        if 'Engineer' in cat_ser[x]:
-            cat_ser[x] = cat_ser[x].replace('Engineer', '')
-        elif 'Analyst' in cat_ser[x]:
-            cat_ser[x] = 'Analyst'
 
     sns.set_theme(style='white')
     fig1, ax1 = plt.subplots(figsize=(6,4))
@@ -31,6 +30,7 @@ def job_categories():
     plt.show(fig1)
 
     return fig1
+
 
 def initial_responses():
 
@@ -145,36 +145,72 @@ def apps_timeline():
 
     return fig2
 
+
+
 def explore_data():
-
-    X = jobs_df.loc[:][:'url'].reset_index(drop=True)
-    print(X)
-    y = jobs_df['initial_response']
-
-    cat_columns = ['job_cat', 'location']
+    # slice and label encode features
+    X = jobs_df.loc[:, 'job_cat':'method'].reset_index(drop=True)
     bi_columns = ['department', 'recruiter', 'referral', 'method']
+    cat_columns = ['job_cat', 'location']
 
-    cat_trans = make_pipeline(
-        SimpleImputer(strategy='constant', fill_value='missing'),
-        OneHotEncoder(handle_unknown='ignore')
-    )
+    X.loc[X['method'] == 'linkedin', 'method'] = 0
+    for c in bi_columns:
+        X.loc[X[c].isna(), c] = 0
+        X.loc[X[c] != 0, c] = 1
 
-    bi_trans = make_pipeline(
-        SimpleImputer(strategy='most_frequent'),
-        OneHotEncoder(handle_unknown='ignore')
-    )
+    le = LabelEncoder()
+    for c in cat_columns:
+        X.loc[:, c] = le.fit_transform(X.loc[:, c])
 
-    preproc = make_column_transformer(
-        (cat_trans, cat_columns),
-        (bi_trans, bi_columns)
-    )
+    # custom encode target (init. response)
+    y = jobs_df['initial_response'].reset_index(drop=True)
+    for idx, v in y.items():
+        if v == 'Rejected':
+            y[idx] = -1
+        elif v == 'No Response':
+            y[idx] = 0
+        else:
+            y[idx] = 1
 
-    X_trans = pd.DataFrame(preproc.fit_transform(X))
-    print(X_trans)
+    df = X.merge(y.to_frame('initial_response'), left_index=True, right_index=True)
 
     fig = sns.pairplot(
-        X_trans,
-        hue = y
+        data=df,
+        hue='initial_response',
+        palette=['silver', 'royalblue', 'chartreuse'],
+        corner=True,
+        diag_kind='kde',
+        kind='hist'
     )
+
+    return plt.show(fig)
+
+def cat_ref_plt():
+
+    X = jobs_df.loc[:, ['job_cat', 'location', 'initial_response']].reset_index(drop=True)
+
+    for idx, r in X.location.items():
+        if 'remote' in r.lower():
+            X.loc[idx, 'location'] = 'Remote'
+
+    X.loc[:, 'job_cat'] = cat_ser
+
+    sns.set_theme(style="whitegrid")
+    fig, ax = plt.subplots(figsize=(10,5))
+
+    sns.swarmplot(
+        data=X,
+        y="location",
+        x="job_cat",
+        size=10,
+        hue="initial_response",
+        palette=['black', 'grey', 'limegreen'],
+        ax=ax,
+    )
+
+    ax.set_title('Relationship between job category, department, and initial response')
+    ax.set_xlabel('Job Category')
+    ax.set_ylabel('Small Department?')
+    ax.get_legend().remove()
 
     return plt.show(fig)
