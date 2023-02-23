@@ -45,6 +45,7 @@ def initial_responses():
     }
 
     r_df = pd.DataFrame(data=r_dict, index=formatted_dates)
+    print(r_df)
 
     return r_df
 
@@ -70,13 +71,13 @@ def apps_timeline():
     no_response = []
     immediate_rejection = []
     rejected_post_int = []
-    waiting = []
+    in_interviews = []
 
     for x in outcomes_counter:
         no_response.append(x['No Response'])
         immediate_rejection.append(x['Immediate Rejection'])
         rejected_post_int.append(x['Rejected Post-Interview'])
-        waiting.append(x['Waiting'])
+        in_interviews.append(x['In Interviews'])
 
     outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
     dts_array = np.array(outcome_dts, dtype='datetime64')
@@ -85,7 +86,7 @@ def apps_timeline():
         'Immediate Rejection': immediate_rejection,
         'Rejected Post-Interview': rejected_post_int,
         'No Response': no_response,
-        'Waiting': waiting
+        'In Interviews': in_interviews
     }
     responses_df = pd.DataFrame(data=t_dict, index=dts_array)
 
@@ -112,7 +113,8 @@ def two_by_two():
 
     # responses plot
     r_df = initial_responses()
-    color_list = ['black', 'silver', 'yellowgreen']
+    r_pal = sns.color_palette('magma', 10)
+    color_list = [r_pal[0], r_pal[0], r_pal[9]]
     r_accum = [0] * len(r_df)
 
     for resp, co in zip(r_df.columns, color_list):
@@ -133,8 +135,8 @@ def two_by_two():
 
     # timeline
     responses_df = apps_timeline()
-    cat_pal = sns.color_palette("inferno", 10)
-    cat_pal_list = [cat_pal[1], cat_pal[4], cat_pal[8], 'yellowgreen']
+    cat_pal = sns.color_palette("magma", 10)
+    cat_pal_list = [cat_pal[1], cat_pal[4], cat_pal[8], cat_pal[9]]
     t_accum = [0] * len(responses_df)
 
     for responses, color in zip(responses_df.columns, cat_pal_list):

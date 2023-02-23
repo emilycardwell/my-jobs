@@ -19,7 +19,7 @@ for x in range(len(cat_ser)):
         cat_ser[x] = cat_ser[x].replace('Engineer', '')
 
 ''' SHOWING GRAPHS '''
-def job_categories():
+def show_job_categories():
 
     sns.set_theme(style='white')
     fig1, ax1 = plt.subplots(figsize=(6,4))
@@ -32,7 +32,7 @@ def job_categories():
     return fig1
 
 
-def initial_responses():
+def show_initial_responses():
 
     X = jobs_df.loc[:, ['initial_response']].reset_index('company_name', drop=True)
     X = X.reset_index().sort_values('date_applied')
@@ -67,7 +67,7 @@ def initial_responses():
 
     return r_fig
 
-def apps_timeline():
+def show_apps_timeline():
 
     outcomes_df = jobs_df.loc[:, ['initial_response', 'final_outcome']].droplevel(level=0).sort_index().reset_index()
     for idx in outcomes_df.index:
@@ -147,7 +147,7 @@ def apps_timeline():
 
 
 
-def explore_data():
+def show_pair():
     # slice and label encode features
     X = jobs_df.loc[:, 'job_cat':'method'].reset_index(drop=True)
     bi_columns = ['department', 'recruiter', 'referral', 'method']
@@ -177,7 +177,7 @@ def explore_data():
     fig = sns.pairplot(
         data=df,
         hue='initial_response',
-        palette=['silver', 'royalblue', 'chartreuse'],
+        palette=['tomato', 'silver', 'royalblue'],
         corner=True,
         diag_kind='kde',
         kind='hist'
@@ -185,7 +185,7 @@ def explore_data():
 
     return plt.show(fig)
 
-def cat_ref_plt():
+def show_cat_ref():
 
     X = jobs_df.loc[:, ['job_cat', 'location', 'initial_response']].reset_index(drop=True)
 
@@ -204,7 +204,7 @@ def cat_ref_plt():
         x="job_cat",
         size=10,
         hue="initial_response",
-        palette=['black', 'grey', 'limegreen'],
+        palette=['black', 'silver', 'limegreen'],
         ax=ax,
     )
 
