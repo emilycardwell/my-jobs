@@ -1,201 +1,47 @@
 ''' IMPORTS '''
 import pandas as pd
-import numpy as np
-from collections import Counter
-from dateutil.relativedelta import relativedelta
-import seaborn as sns
+
+
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder
+import matplotlib.gridspec as gs
+import seaborn as sns
+sns.set_theme(style='white')
 
-jobs_df = pd.read_json('job_data.json', orient='table')
-
-cat_ser = jobs_df['job_cat'].reset_index(drop=True)
-for x in range(len(cat_ser)):
-    if 'Data Engineer' == cat_ser[x]:
-        cat_ser[x] = 'DE'
-    elif 'Data Analyst' == cat_ser[x]:
-        cat_ser[x] = 'DA'
-    elif 'Engineer' in cat_ser[x]:
-        cat_ser[x] = cat_ser[x].replace('Engineer', '')
-
-''' SHOWING GRAPHS '''
-def show_job_categories():
-
-    sns.set_theme(style='white')
-    fig1, ax1 = plt.subplots(figsize=(6,4))
-    fig1 = sns.countplot(x=cat_ser, palette='magma')
-    ax1.set_title('Job Categories')
-    ax1.set_xlabel('Job Category')
-    plt.xticks(rotation=45)
-    plt.show(fig1)
-
-    return fig1
+from py_files.data_functions import read_df
+from py_files.plotting_functions import get_slim_cats, get_ohe_df, \
+                                        get_fodf_dates_fm, get_encoded_cols, \
+                                        get_location_df
 
 
-def show_initial_responses():
-
-    X = jobs_df.loc[:, ['initial_response']].reset_index('company_name', drop=True)
-    X = X.reset_index().sort_values('date_applied')
-
-    gb_df = X.groupby('date_applied').value_counts().unstack(fill_value=0)
-    u_dates = sorted(list(set(X.date_applied)))
-    formatted_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in u_dates]
-
-    r_dict = {'date_applied': formatted_dates,
-                'Rejected': list(gb_df['Rejected']),
-                'No Response': list(gb_df['No Response']),
-                'Passed': list(gb_df['Passed'])
-    }
-
-    r_df = pd.DataFrame(data=r_dict)
-
-    sns.set_theme(style='white')
-    r_fig, ax = plt.subplots(figsize=(6,4))
-
-    r_fig = r_df.plot(
-        kind='bar',
-        colormap=sns.color_palette('viridis', as_cmap=True),
-        stacked=True,
-        xlabel='Date Applied',
-        title='Initial Responses',
-        ax=ax,
-        width=1
-    )
-
-    plt.xticks([0, len(formatted_dates)-1], [formatted_dates[0], formatted_dates[-1]], rotation='horizontal')
-    plt.show(r_fig)
-
-    return r_fig
-
-def show_apps_timeline():
-
-    outcomes_df = jobs_df.loc[:, ['initial_response', 'final_outcome']].droplevel(level=0).sort_index().reset_index()
-    for idx in outcomes_df.index:
-        row = outcomes_df.loc[idx]
-        if row.final_outcome == 'Rejected' and row.initial_response == "Passed":
-            row.final_outcome = 'Rejected Post-Interview'
-        elif row.initial_response == 'Rejected':
-            row.final_outcome = 'Immediate Rejection'
-        elif row.initial_response == 'No Response':
-            row.final_outcome = 'No Response'
-    outcomes_df.drop(columns='initial_response', inplace=True)
-
-    grouped_outcomes_df = outcomes_df.groupby('date_applied')
-    outcome_dates = list(grouped_outcomes_df.groups.keys())
-    outcomes_counter = [Counter(grouped_outcomes_df.get_group(date).final_outcome)\
-        for date in outcome_dates]
-
-    no_response = []
-    immediate_rejection = []
-    rejected_post_int = []
-    waiting = []
-
-    for x in outcomes_counter:
-        no_response.append(x['No Response'])
-        immediate_rejection.append(x['Immediate Rejection'])
-        rejected_post_int.append(x['Rejected Post-Interview'])
-        waiting.append(x['Waiting'])
-
-    outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
-    dts_array = np.array(outcome_dts, dtype='datetime64')
-
-    x_lines = pd.date_range(
-        pd.to_datetime(dts_array[0]) - relativedelta(days=5),
-        pd.to_datetime(dts_array[-1]) + relativedelta(days=2), freq='SMS'
-    )
-    x_labes = [x.strftime('%b %-d') for x in x_lines]
-
-    sns.set_theme(style='white')
-    fig2, ax2 = plt.subplots(figsize=(12,4))
-
-    # cat_palette = ['black', 'crimson', 'grey', 'lightskyblue']
-    cat_palette = sns.color_palette("viridis", 8)
-    w = 1
-
-    second = np.array(rejected_post_int) + np.array(immediate_rejection)
-    top = second + np.array(no_response)
-
-    fig2 = ax2.bar(
-        dts_array, immediate_rejection, width=w, label='Immediate Rejection',
-        color=cat_palette[0]
-    )
-    fig2 = ax2.bar(
-        dts_array, rejected_post_int, width=w, bottom=immediate_rejection,
-        label='Rejected Post-Interview', color=cat_palette[3]
-    )
-    fig2 = ax2.bar(
-        dts_array, no_response, width=w, bottom=second, label='No Response',
-        color='silver'
-    )
-    fig2 = ax2.bar(
-        dts_array, waiting, width=w, bottom=top, label='In Interviews',
-        color=cat_palette[7]
-    )
-
-    ax2.set_xticks(x_lines)
-    ax2.set_xticklabels(x_labes)
-    ax2.set_ybound(0, 7)
-
-    ax2.set_xlabel('Date Applied')
-    ax2.set_ylabel('Count')
-    ax2.set_title('Dates Applied and Outcomes of Job Applications')
-    ax2.legend(loc='upper center')
-
-    plt.show(fig2)
-
-    return fig2
+''' GLOBAL VARIABLES'''
+jobs_df = read_df()
 
 
-
+'''
+DATA EXPLORATION
+'''
 def show_pair():
-    # slice and label encode features
-    X = jobs_df.loc[:, 'job_cat':'method'].reset_index(drop=True)
-    bi_columns = ['department', 'recruiter', 'referral', 'method']
-    cat_columns = ['job_cat', 'location']
-
-    X.loc[X['method'] == 'linkedin', 'method'] = 0
-    for c in bi_columns:
-        X.loc[X[c].isna(), c] = 0
-        X.loc[X[c] != 0, c] = 1
-
-    le = LabelEncoder()
-    for c in cat_columns:
-        X.loc[:, c] = le.fit_transform(X.loc[:, c])
-
-    # custom encode target (init. response)
-    y = jobs_df['initial_response'].reset_index(drop=True)
-    for idx, v in y.items():
-        if v == 'Rejected':
-            y[idx] = -1
-        elif v == 'No Response':
-            y[idx] = 0
-        else:
-            y[idx] = 1
-
-    df = X.merge(y.to_frame('initial_response'), left_index=True, right_index=True)
-
+    X = get_encoded_cols()
     fig = sns.pairplot(
-        data=df,
+        data=X,
         hue='initial_response',
         palette=['tomato', 'silver', 'royalblue'],
         corner=True,
         diag_kind='kde',
         kind='hist'
     )
-
     return plt.show(fig)
+
 
 def show_cat_ref():
 
     X = jobs_df.loc[:, ['job_cat', 'location', 'initial_response']].reset_index(drop=True)
+    X.loc[:, 'job_cat'] = get_slim_cats()
 
     for idx, r in X.location.items():
         if 'remote' in r.lower():
             X.loc[idx, 'location'] = 'Remote'
 
-    X.loc[:, 'job_cat'] = cat_ser
-
-    sns.set_theme(style="whitegrid")
     fig, ax = plt.subplots(figsize=(10,5))
 
     sns.swarmplot(
@@ -208,9 +54,146 @@ def show_cat_ref():
         ax=ax,
     )
 
-    ax.set_title('Relationship between job category, department, and initial response')
-    ax.set_xlabel('Job Category')
-    ax.set_ylabel('Small Department?')
+    ax.set_title('Job Category, Location, & Initial Response')
+    ax.set_xlabel('Category')
+    ax.set_ylabel('Location')
     ax.get_legend().remove()
 
     return plt.show(fig)
+
+
+'''
+SINGLE GRAPHS
+'''
+def show_job_categories():
+    cat_slim_ser = get_slim_cats()
+    fig, ax = plt.subplots(figsize=(6,4))
+    fig = sns.countplot(x=cat_slim_ser, palette='magma')
+    ax.set_title('Job Category Counts')
+    ax.set_xlabel('Category')
+    plt.xticks(rotation=45)
+
+    return plt.show(fig)
+
+
+def show_initial_responses():
+
+    r_df, formatted_dates = get_ohe_df()
+    r_fig, ax = plt.subplots(figsize=(6,4))
+
+    r_fig = r_df.plot(
+        kind='bar',
+        colormap=sns.color_palette('viridis', as_cmap=True),
+        stacked=True,
+        xlabel='Date Applied',
+        title='Initial Responses',
+        ax=ax,
+        width=1
+    )
+
+    plt.xticks(
+        [0, len(formatted_dates)-1],
+        [formatted_dates[0], formatted_dates[-1]],
+        rotation='horizontal'
+    )
+
+    return plt.show(r_fig)
+
+
+def show_apps_timeline():
+
+    responses_df, x_tick_values, x_tick_labels = get_fodf_dates_fm()
+    cat_pal = sns.color_palette("viridis", 8)
+    cat_pal_list = [cat_pal[0], cat_pal[3], 'silver', cat_pal[7]]
+    t_accum = [0] * len(responses_df)
+
+    fig, ax = plt.subplots(figsize=(12,4))
+
+    for responses, color in zip(responses_df.columns, cat_pal_list):
+        ax.bar(
+            x=responses_df.index,
+            height=list(responses_df[responses]),
+            bottom=t_accum,
+            width=1,
+            label=responses,
+            color=color
+        )
+        t_accum += responses_df[responses]
+
+    ax.set_xticks(x_tick_values)
+    ax.set_xticklabels(x_tick_labels)
+    ax.set_ybound(0, 7)
+    ax.set_xlabel('Date Applied')
+    ax.set_ylabel('Count')
+    ax.set_title('Dates Applied and Outcomes of Job Applications')
+    ax.legend(loc='upper center')
+
+    return plt.show(fig)
+
+
+'''
+MULTIPLOTS
+'''
+def two_by_two_subplt():
+
+    # set figure
+    fig = plt.figure(constrained_layout=True, figsize=(10,10))
+    spec = gs.GridSpec(ncols=1, nrows=3, figure=fig)
+    ax1 = fig.add_subplot(spec[0, 0])
+    ax2 = fig.add_subplot(spec[1, 0])
+    ax3 = fig.add_subplot(spec[2, 0])
+
+
+    # cat plot
+    cat_ser = get_slim_cats()
+    sns.countplot(ax=ax1, x=cat_ser, palette='Blues')
+    ax1.set_title('Job Category Counts')
+    ax1.set_xlabel('Category')
+
+
+    my_pal = r_pal = sns.color_palette('magma', 10)
+    # location plot: x_axis='location', y_axis=count, hue='init_resp'
+    X = get_location_df()
+    r_color_list = [my_pal[0], my_pal[6], my_pal[9]]
+
+    sns.countplot(
+        ax=ax2,
+        x=X.location,
+        hue=X.initial_response,
+        palette=r_color_list,
+        saturation=1
+    )
+
+    ax2.set_title('Location & Initial Responses')
+    ax2.set_xlabel('Location')
+    ax2.legend(loc='upper left')
+
+
+    # timeline
+    responses_df, x_tick_values, x_tick_labels = get_fodf_dates_fm()
+    cat_color_list = [my_pal[0], my_pal[3], my_pal[6], my_pal[9]]
+    t_accum = [0] * len(responses_df)
+
+    for responses, color in zip(responses_df.columns, cat_color_list):
+        ax3.bar(
+            x=responses_df.index,
+            height=list(responses_df[responses]),
+            bottom=t_accum,
+            width=1,
+            label=responses,
+            color=color
+        )
+        t_accum += responses_df[responses]
+
+    ax3.set_xticks(x_tick_values)
+    ax3.set_xticklabels(x_tick_labels)
+    ax3.set_ybound(0, 7)
+
+    ax3.set_xlabel('Date Applied')
+    ax3.set_ylabel('Count')
+    ax3.set_title('Dates Applied and Outcomes of Job Applications')
+    ax3.legend(loc='upper right')
+
+    plt.show()
+
+    return

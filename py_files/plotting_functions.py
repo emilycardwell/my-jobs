@@ -1,21 +1,25 @@
-
 '''
 GET ALL GRAPHS AS SUBPLOTS
 '''
+
 ''' IMPORTS '''
 import pandas as pd
 import numpy as np
 from collections import Counter
 from dateutil.relativedelta import relativedelta
-import seaborn as sns
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gs
+from sklearn.preprocessing import LabelEncoder
 
-jobs_df = pd.read_json('job_data.json', orient='table')
+from py_files.data_functions import read_df
+
+
+''' GLOBAL VARIABLES '''
+jobs_df = read_df()
+
 
 ''' SHOWING GRAPHS '''
-def job_categories():
+def get_slim_cats():
 
+    # get reformatted categories column to fit on graphs
     cat_ser = jobs_df['job_cat'].reset_index(drop=True)
     for x in range(len(cat_ser)):
         if 'Data Engineer' == cat_ser[x]:
@@ -28,7 +32,7 @@ def job_categories():
     return cat_ser.sort_values()
 
 
-def initial_responses():
+def get_ohe_df():
 
     X = jobs_df.loc[:, ['initial_response']].reset_index('company_name', drop=True)
     X = X.reset_index().sort_values('date_applied').reset_index(drop=True)
@@ -45,14 +49,18 @@ def initial_responses():
     }
 
     r_df = pd.DataFrame(data=r_dict, index=formatted_dates)
-    print(r_df)
 
-    return r_df
+    return r_df, formatted_dates
 
 
-def apps_timeline():
+def get_fodf_dates_fm():
 
-    outcomes_df = jobs_df.loc[:, ['initial_response', 'final_outcome']].droplevel(level=0).sort_index().reset_index()
+    # select columns date_applied, initial_response, final_outcome
+    outcomes_df = jobs_df.loc[:, ['initial_response', 'final_outcome']].droplevel(level=0)
+    # sort by date and drop my indexes
+    outcomes_df = outcomes_df.sort_index().reset_index()
+
+    # re-label final outcome by init and final responses
     for idx in outcomes_df.index:
         row = outcomes_df.loc[idx]
         if row.final_outcome == 'Rejected' and row.initial_response == "Passed":
@@ -61,8 +69,10 @@ def apps_timeline():
             row.final_outcome = 'Immediate Rejection'
         elif row.initial_response == 'No Response':
             row.final_outcome = 'No Response'
-    outcomes_df.drop(columns='initial_response', inplace=True)
 
+    outcomes_df = outcomes_df.drop(columns='initial_response')
+
+    # use counter to get values of final outcomes by date
     grouped_outcomes_df = outcomes_df.groupby('date_applied')
     outcome_dates = list(grouped_outcomes_df.groups.keys())
     outcomes_counter = [Counter(grouped_outcomes_df.get_group(date).final_outcome)\
@@ -79,6 +89,7 @@ def apps_timeline():
         rejected_post_int.append(x['Rejected Post-Interview'])
         in_interviews.append(x['In Interviews'])
 
+    # set dates as datetime objects and create dataframe with counter info
     outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
     dts_array = np.array(outcome_dts, dtype='datetime64')
 
@@ -90,82 +101,52 @@ def apps_timeline():
     }
     responses_df = pd.DataFrame(data=t_dict, index=dts_array)
 
-    return responses_df
-
-
-def two_by_two():
-
-    # set figure
-    sns.set_theme(style='white')
-    fig = plt.figure(constrained_layout=True, figsize=(16,10))
-    spec = gs.GridSpec(ncols=2, nrows=2, figure=fig)
-    ax1 = fig.add_subplot(spec[0, 0])
-    ax2 = fig.add_subplot(spec[0, 1])
-    ax3 = fig.add_subplot(spec[1, :])
-
-
-    # cat plot
-    cat_ser = job_categories()
-    sns.countplot(ax=ax1, x=cat_ser, palette='Blues')
-    ax1.set_title('Job Categories')
-    ax1.set_xlabel('Category')
-
-
-    # responses plot
-    r_df = initial_responses()
-    r_pal = sns.color_palette('magma', 10)
-    color_list = [r_pal[0], r_pal[0], r_pal[9]]
-    r_accum = [0] * len(r_df)
-
-    for resp, co in zip(r_df.columns, color_list):
-        ax2.bar(
-            x=r_df.index,
-            height=list(r_df[resp]),
-            bottom=r_accum,
-            width=.5,
-            label=resp,
-            color=co
-        )
-        r_accum += r_df[resp]
-
-    ax2.set_title('Initial Responses')
-    ax2.set_xlabel('Date Applied')
-    ax2.legend(loc=9)
-
-
-    # timeline
-    responses_df = apps_timeline()
-    cat_pal = sns.color_palette("magma", 10)
-    cat_pal_list = [cat_pal[1], cat_pal[4], cat_pal[8], cat_pal[9]]
-    t_accum = [0] * len(responses_df)
-
-    for responses, color in zip(responses_df.columns, cat_pal_list):
-        ax3.bar(
-            x=responses_df.index,
-            height=list(responses_df[responses]),
-            bottom=t_accum,
-            width=1,
-            label=responses,
-            color=color
-        )
-        t_accum += responses_df[responses]
-
     # x axis date labels
-    x_lines = pd.date_range(
+    x_tick_values = pd.date_range(
         pd.to_datetime(responses_df.index[0]) - relativedelta(days=5),
         pd.to_datetime(responses_df.index[-1]) + relativedelta(days=5), freq='SMS'
     )
-    x_labes = [x.strftime('%b %-d') for x in x_lines]
-    ax3.set_xticks(x_lines)
-    ax3.set_xticklabels(x_labes)
-    ax3.set_ybound(0, 7)
+    x_tick_labels = [x.strftime('%b %-d') for x in x_tick_values]
 
-    ax3.set_xlabel('Date Applied')
-    ax3.set_ylabel('Count')
-    ax3.set_title('Dates Applied and Outcomes of Job Applications')
-    ax3.legend(loc=9)
+    return responses_df, x_tick_values, x_tick_labels
 
-    # plt.xticks(rotation='horizontal')
-    plt.show()
 
-    return
+def get_encoded_cols():
+    # slice and label encode features
+    X = jobs_df.loc[:, 'job_cat':'method'].reset_index(drop=True)
+    bi_columns = ['department', 'recruiter', 'referral', 'method']
+    cat_columns = ['job_cat', 'location']
+
+    X.loc[X['method'] == 'linkedin', 'method'] = 0
+    for c in bi_columns:
+        X.loc[X[c].isna(), c] = 0
+        X.loc[X[c] != 0, c] = 1
+
+    le = LabelEncoder()
+    for c in cat_columns:
+        X.loc[:, c] = le.fit_transform(X.loc[:, c])
+
+    # custom encode target (init. response)
+    y = jobs_df['initial_response'].reset_index(drop=True)
+    for idx, v in y.items():
+        if v == 'Rejected':
+            y[idx] = -1
+        elif v == 'No Response':
+            y[idx] = 0
+        else:
+            y[idx] = 1
+
+    df = X.merge(y.to_frame('initial_response'), left_index=True, right_index=True)
+
+    return df
+
+
+def get_location_df():
+
+    X = jobs_df.loc[:, ['location', 'initial_response']].reset_index(drop=True)
+
+    for idx, r in X.location.items():
+        if 'remote' in r.lower():
+            X.loc[idx, 'location'] = 'Remote'
+
+    return X

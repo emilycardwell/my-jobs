@@ -2,12 +2,16 @@
 import pandas as pd
 import json
 
+''' GLOBAL VARIABLES'''
+index_cols = ['company_name', 'date_applied']
 
 '''
 WRITING DATA
 '''
 
-index_cols = ['company_name', 'date_applied']
+def read_df():
+    jobs_df = pd.read_json('data/job_data.json', orient='table')
+    return jobs_df
 
 def make_df(cols, data):
     ser = pd.DataFrame(data, index=cols)
@@ -107,8 +111,3 @@ def add_to_json(new_jobs_df, show='all'):
         return jobs_df
     else:
         return jobs_df.head(show)
-
-
-def view_data():
-    jobs_df = pd.read_json('job_data.json', orient='table')
-    return jobs_df

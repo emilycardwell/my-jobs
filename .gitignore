@@ -1,5 +1,6 @@
 # Data Files
 *.json
+data/*
 
 # Cached Files
 __pycache__/
