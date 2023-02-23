@@ -1,3 +1,6 @@
+.envrc
+.env
+
 # Data Files
 *.json
 data/*
