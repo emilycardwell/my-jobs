@@ -9,9 +9,10 @@ index_cols = ['company_name', 'date_applied']
 WRITING DATA
 '''
 
-def read_df():
-    jobs_df = pd.read_json('data/job_data.json', orient='table')
+def read_df(file_path):
+    jobs_df = pd.read_json(file_path, orient='table')
     return jobs_df
+
 
 def make_df(cols, data):
     ser = pd.DataFrame(data, index=cols)
