@@ -1,15 +1,20 @@
 ''' IMPORTS '''
 import pandas as pd
 import json
+import os
+
 
 ''' GLOBAL VARIABLES'''
 index_cols = ['company_name', 'date_applied']
+data_path = os.getenv('DATA_PATH')
+
 
 '''
 WRITING DATA
 '''
 
-def read_df(file_path):
+def read_df(file_name='/job_data.json'):
+    file_path = data_path + file_name
     jobs_df = pd.read_json(file_path, orient='table')
     return jobs_df
 

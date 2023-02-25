@@ -4,9 +4,6 @@ GET ALL GRAPHS AS SUBPLOTS
 
 ''' IMPORTS '''
 import pandas as pd
-import numpy as np
-from collections import Counter
-from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import LabelEncoder
 
 from py_files.data_functions import read_df
@@ -53,7 +50,7 @@ def get_ohe_df():
     return r_df, formatted_dates
 
 
-def get_fodf_dates_fm():
+def get_responses():
 
     # select columns date_applied, initial_response, final_outcome
     outcomes_df = jobs_df.loc[:, ['initial_response', 'final_outcome']].droplevel(level=0)
@@ -64,51 +61,45 @@ def get_fodf_dates_fm():
     for idx in outcomes_df.index:
         row = outcomes_df.loc[idx]
         if row.final_outcome == 'Rejected' and row.initial_response == "Passed":
-            row.final_outcome = 'Rejected Post-Interview'
+            outcomes_df.loc[idx, ['final_outcome']] = 'Rejected Post-Interview'
         elif row.initial_response == 'Rejected':
-            row.final_outcome = 'Immediate Rejection'
+            outcomes_df.loc[idx, ['final_outcome']] = 'Immediate Rejection'
         elif row.initial_response == 'No Response':
-            row.final_outcome = 'No Response'
+            outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
 
     outcomes_df = outcomes_df.drop(columns='initial_response')
 
-    # use counter to get values of final outcomes by date
-    grouped_outcomes_df = outcomes_df.groupby('date_applied')
-    outcome_dates = list(grouped_outcomes_df.groups.keys())
-    outcomes_counter = [Counter(grouped_outcomes_df.get_group(date).final_outcome)\
-        for date in outcome_dates]
+    grouped_df = outcomes_df.groupby('date_applied').value_counts().unstack(fill_value=0)
+    responses_df = grouped_df.reset_index()
+    responses_df.loc[:, 'date_applied'] = pd.to_datetime(
+        responses_df.loc[:, 'date_applied']
+    ).dt.date
 
-    no_response = []
-    immediate_rejection = []
-    rejected_post_int = []
-    in_interviews = []
+    return responses_df
 
-    for x in outcomes_counter:
-        no_response.append(x['No Response'])
-        immediate_rejection.append(x['Immediate Rejection'])
-        rejected_post_int.append(x['Rejected Post-Interview'])
-        in_interviews.append(x['In Interviews'])
+def get_prep_df():
 
-    # set dates as datetime objects and create dataframe with counter info
-    outcome_dts = [pd.to_datetime(x).strftime('%Y-%m-%d') for x in outcome_dates]
-    dts_array = np.array(outcome_dts, dtype='datetime64')
+    cw_df = read_df('/codewars.json')
+    hr_df = read_df('/hackerrank.json')
+    cw_df.rename(columns={'id': 'submission'}, inplace=True)
 
-    t_dict = {
-        'Immediate Rejection': immediate_rejection,
-        'Rejected Post-Interview': rejected_post_int,
-        'No Response': no_response,
-        'In Interviews': in_interviews
-    }
-    responses_df = pd.DataFrame(data=t_dict, index=dts_array)
+    data_df = pd.concat([cw_df, hr_df])
 
-    # x axis date labels
-    x_tick_values = pd.date_range(
-        pd.to_datetime(responses_df.index[0]) - relativedelta(days=5),
-        pd.to_datetime(responses_df.index[-1]) + relativedelta(days=5), freq='SMS'
-    )
-    x_tick_labels = [x.strftime('%b %-d') for x in x_tick_values]
+    grouped_df = data_df.groupby('date_completed').count().reset_index()
 
-    return responses_df, x_tick_values, x_tick_labels
+    return grouped_df
+
+def get_timeline_df():
+
+    rdf = get_responses().rename(columns={'date_applied': 'date'})
+    pdf = get_prep_df().rename(columns={'date_completed': 'date'})
+
+    condf = pd.concat([rdf, pdf]).fillna(0).convert_dtypes()
+
+    condf.loc[:, 'date'] = pd.to_datetime(condf.date).dt.date
+
+    condf = condf.sort_values('date').reset_index(drop=True)
+
 
 
 def get_encoded_cols():
@@ -149,4 +140,4 @@ def get_location_df():
         if 'remote' in r.lower():
             X.loc[idx, 'location'] = 'Remote'
 
-    return X
+    return X.sort_values('location').reset_index()

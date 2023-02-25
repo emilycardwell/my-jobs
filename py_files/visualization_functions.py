@@ -1,6 +1,6 @@
 ''' IMPORTS '''
 import pandas as pd
-
+from dateutil.relativedelta import relativedelta
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
@@ -8,9 +8,9 @@ import seaborn as sns
 sns.set_theme(style='white')
 
 from py_files.data_functions import read_df
-from py_files.plotting_functions import get_slim_cats, get_ohe_df, \
-                                        get_fodf_dates_fm, get_encoded_cols, \
-                                        get_location_df
+from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
+                                        get_responses, get_encoded_cols, \
+                                        get_location_df, get_prep_df
 
 
 ''' GLOBAL VARIABLES'''
@@ -102,7 +102,7 @@ def show_initial_responses():
 
 def show_apps_timeline():
 
-    responses_df, x_tick_values, x_tick_labels = get_fodf_dates_fm()
+    responses_df, x_tick_values, x_tick_labels = get_responses()
     cat_pal = sns.color_palette("viridis", 8)
     cat_pal_list = [cat_pal[0], cat_pal[3], 'silver', cat_pal[7]]
     t_accum = [0] * len(responses_df)
@@ -136,47 +136,63 @@ MULTIPLOTS
 '''
 def two_by_two_subplt():
 
-    # set figure
-    fig = plt.figure(constrained_layout=True, figsize=(10,10))
-    spec = gs.GridSpec(ncols=1, nrows=3, figure=fig)
-    ax1 = fig.add_subplot(spec[0, 0])
-    ax2 = fig.add_subplot(spec[1, 0])
-    ax3 = fig.add_subplot(spec[2, 0])
-
-
-    # cat plot
     cat_ser = get_slim_cats()
-    sns.countplot(ax=ax1, x=cat_ser, palette='Blues')
-    ax1.set_title('Job Category Counts')
-    ax1.set_xlabel('Category')
+    loc_df = get_location_df()
+
+    # set figure
+    fig = plt.figure(constrained_layout=True, figsize=(15,15))
+    spec = gs.GridSpec(ncols=2, nrows=3, figure=fig)
+    ax1 = fig.add_subplot(spec[0, 0])
+    ax1_1 = fig.add_subplot(spec[0, 1])
+    ax2 = fig.add_subplot(spec[1, 0])
+    ax2_2 = fig.add_subplot(spec[1, 1])
+    ax3 = fig.add_subplot(spec[2, :])
 
 
-    my_pal = r_pal = sns.color_palette('magma', 10)
-    # location plot: x_axis='location', y_axis=count, hue='init_resp'
-    X = get_location_df()
-    r_color_list = [my_pal[0], my_pal[6], my_pal[9]]
+    # category plot
+    sns.countplot(ax=ax1, x=cat_ser, color='blueviolet', saturation=.3)
+    ax1.set_title('Job Type Counts')
+    ax1.set_xlabel('Job Type')
 
+    # location plot (basic)
+    sns.countplot(ax=ax1_1, x=loc_df.location, color='crimson', saturation=.5)
+    ax1_1.set_title('Job Location Counts')
+    ax1_1.set_xlabel('Location')
+
+    # category plot (by initial response)
     sns.countplot(
         ax=ax2,
-        x=X.location,
-        hue=X.initial_response,
-        palette=r_color_list,
-        saturation=1
+        x=cat_ser,
+        hue=loc_df.initial_response,
+        palette='Purples_r'
     )
 
-    ax2.set_title('Location & Initial Responses')
-    ax2.set_xlabel('Location')
+    ax2.set_title('Job Type & Initial Responses')
+    ax2.set_xlabel('Job Type')
     ax2.legend(loc='upper left')
 
+    # location plot (by initial response)
+    sns.countplot(
+        ax=ax2_2,
+        x=loc_df.location,
+        hue=loc_df.initial_response,
+        palette='Reds_r'
+    )
+
+    ax2_2.set_title('Location & Initial Responses')
+    ax2_2.set_xlabel('Location')
+    ax2_2.legend(loc='upper right')
 
     # timeline
-    responses_df, x_tick_values, x_tick_labels = get_fodf_dates_fm()
-    cat_color_list = [my_pal[0], my_pal[3], my_pal[6], my_pal[9]]
+    responses_df = get_responses()
+    cat_pal = sns.color_palette("viridis", 10)
+    cat_pal_list = [cat_pal[0], cat_pal[3], cat_pal[5], cat_pal[9]]
     t_accum = [0] * len(responses_df)
+    print(responses_df.index)
 
-    for responses, color in zip(responses_df.columns, cat_color_list):
+    for responses, color in zip(responses_df.columns, cat_pal_list):
         ax3.bar(
-            x=responses_df.index,
+            x=pd.to_datetime(responses_df.index),
             height=list(responses_df[responses]),
             bottom=t_accum,
             width=1,
@@ -185,13 +201,22 @@ def two_by_two_subplt():
         )
         t_accum += responses_df[responses]
 
+    x_ticks = ax3.get_xticks()
+    print(x_ticks)
+    # x axis date labels
+    x_tick_values = pd.date_range(pd.to_datetime(x_ticks[0]),
+                                  pd.to_datetime(x_ticks[-1]),
+                                  freq='SMS')
+    x_tick_labels = [x.strftime('%d %m') for x in x_tick_values]
+
     ax3.set_xticks(x_tick_values)
     ax3.set_xticklabels(x_tick_labels)
     ax3.set_ybound(0, 7)
 
+    ax3.set_alpha(.5)
     ax3.set_xlabel('Date Applied')
     ax3.set_ylabel('Count')
-    ax3.set_title('Dates Applied and Outcomes of Job Applications')
+    ax3.set_title('Timeline of Job Applications and Coding Practice')
     ax3.legend(loc='upper right')
 
     plt.show()

@@ -8,7 +8,7 @@ import seaborn as sns
 sns.set_theme(style='white')
 
 from py_files.data_functions import read_df
-from py_files.plotting_functions import get_slim_cats, get_ohe_df, \
+from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
                                         get_fodf_dates_fm, get_encoded_cols, \
                                         get_location_df
 
