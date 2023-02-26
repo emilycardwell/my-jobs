@@ -13,5 +13,5 @@ __init__.py
 .ipynb_checkpoints
 README.ipynb
 
-#rando
-my_jobs/egg-info
+# egg
+*.egg-info/
