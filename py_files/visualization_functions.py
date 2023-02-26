@@ -2,6 +2,7 @@
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
+import matplotlib.dates as mpld
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
 import seaborn as sns
@@ -10,7 +11,7 @@ sns.set_theme(style='white')
 from py_files.data_functions import read_df
 from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
                                         get_responses, get_encoded_cols, \
-                                        get_location_df, get_prep_df
+                                        get_location_df, get_timeline_df
 
 
 ''' GLOBAL VARIABLES'''
@@ -102,9 +103,9 @@ def show_initial_responses():
 
 def show_apps_timeline():
 
-    responses_df, x_tick_values, x_tick_labels = get_responses()
+    responses_df = get_timeline_df()
     cat_pal = sns.color_palette("viridis", 8)
-    cat_pal_list = [cat_pal[0], cat_pal[3], 'silver', cat_pal[7]]
+    cat_pal_list = [cat_pal[0], cat_pal[3], 'silver', cat_pal[7], 'gold']
     t_accum = [0] * len(responses_df)
 
     fig, ax = plt.subplots(figsize=(12,4))
@@ -120,8 +121,8 @@ def show_apps_timeline():
         )
         t_accum += responses_df[responses]
 
-    ax.set_xticks(x_tick_values)
-    ax.set_xticklabels(x_tick_labels)
+    # ax.set_xticks(x_tick_values)
+    # ax.set_xticklabels(x_tick_labels)
     ax.set_ybound(0, 7)
     ax.set_xlabel('Date Applied')
     ax.set_ylabel('Count')
@@ -140,17 +141,18 @@ def two_by_two_subplt():
     loc_df = get_location_df()
 
     # set figure
+
     fig = plt.figure(constrained_layout=True, figsize=(15,15))
-    spec = gs.GridSpec(ncols=2, nrows=3, figure=fig)
+    spec = gs.GridSpec(ncols=2, nrows=4, figure=fig)
     ax1 = fig.add_subplot(spec[0, 0])
     ax1_1 = fig.add_subplot(spec[0, 1])
     ax2 = fig.add_subplot(spec[1, 0])
     ax2_2 = fig.add_subplot(spec[1, 1])
-    ax3 = fig.add_subplot(spec[2, :])
+    ax3 = fig.add_subplot(spec[2:, :])
 
 
     # category plot
-    sns.countplot(ax=ax1, x=cat_ser, color='blueviolet', saturation=.3)
+    sns.countplot(ax=ax1, x=cat_ser, color='darkorchid', saturation=.3)
     ax1.set_title('Job Type Counts')
     ax1.set_xlabel('Job Type')
 
@@ -184,37 +186,31 @@ def two_by_two_subplt():
     ax2_2.legend(loc='upper right')
 
     # timeline
-    responses_df = get_responses()
-    cat_pal = sns.color_palette("viridis", 10)
-    cat_pal_list = [cat_pal[0], cat_pal[3], cat_pal[5], cat_pal[9]]
-    t_accum = [0] * len(responses_df)
-    print(responses_df.index)
+    tl_df = get_timeline_df()
+    feats = tl_df.iloc[:, 1:]
+    x = list(tl_df.loc[:, 'date'])
 
-    for responses, color in zip(responses_df.columns, cat_pal_list):
+    cat_pal = sns.color_palette("Greens_r", 10)
+    cat_pal_list = ['#0e2407', cat_pal[1], cat_pal[4], 'gold', cat_pal[8]]
+    t_accum = [0] * len(feats)
+
+    for col, color in zip(feats.columns, cat_pal_list):
         ax3.bar(
-            x=pd.to_datetime(responses_df.index),
-            height=list(responses_df[responses]),
+            x=pd.to_datetime(x),
+            height=feats[col],
             bottom=t_accum,
             width=1,
-            label=responses,
-            color=color
+            label=col,
+            color=color,
         )
-        t_accum += responses_df[responses]
+        t_accum += feats[col]
 
-    x_ticks = ax3.get_xticks()
-    print(x_ticks)
-    # x axis date labels
-    x_tick_values = pd.date_range(pd.to_datetime(x_ticks[0]),
-                                  pd.to_datetime(x_ticks[-1]),
-                                  freq='SMS')
-    x_tick_labels = [x.strftime('%d %m') for x in x_tick_values]
-
-    ax3.set_xticks(x_tick_values)
-    ax3.set_xticklabels(x_tick_labels)
-    ax3.set_ybound(0, 7)
-
-    ax3.set_alpha(.5)
+    xform = mpld.DateFormatter('%b %-d')
+    ax3.xaxis.set_major_formatter(xform)
+    ax3.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
     ax3.set_xlabel('Date Applied')
+
+    ax3.set_ylim(top=10.5)
     ax3.set_ylabel('Count')
     ax3.set_title('Timeline of Job Applications and Coding Practice')
     ax3.legend(loc='upper right')

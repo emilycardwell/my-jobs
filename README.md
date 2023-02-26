@@ -5,7 +5,7 @@
 ## Visualizations
 
 
-![png](/README_files/multiplot2.png)
+![png](/README_files/multiplot3.png)
 
 
 
@@ -13,6 +13,6 @@
 
 [Data Functions](/py_files/data_functions.py)
 
-[Vizualization Functions](/py_files/visualization_functions.py)
+[Vizualization Functions](/py_files/get_df_functions.py)
 
-[Subplot Functions](/py_files/subplots.py)
+[Subplot Functions](/py_files/visualization_functions.py)

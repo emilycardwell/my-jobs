@@ -70,24 +70,26 @@ def get_responses():
     outcomes_df = outcomes_df.drop(columns='initial_response')
 
     grouped_df = outcomes_df.groupby('date_applied').value_counts().unstack(fill_value=0)
-    responses_df = grouped_df.reset_index()
-    responses_df.loc[:, 'date_applied'] = pd.to_datetime(
-        responses_df.loc[:, 'date_applied']
-    ).dt.date
+
+    responses_df = grouped_df.reset_index().reindex(columns=[
+        'date_applied', 'Immediate Rejection', 'Rejected Post-Interview',
+        'No Response', 'In Interviews'
+    ])
 
     return responses_df
+
 
 def get_prep_df():
 
     cw_df = read_df('/codewars.json')
     hr_df = read_df('/hackerrank.json')
-    cw_df.rename(columns={'id': 'submission'}, inplace=True)
 
     data_df = pd.concat([cw_df, hr_df])
 
     grouped_df = data_df.groupby('date_completed').count().reset_index()
 
-    return grouped_df
+    return grouped_df.rename(columns={'Submissions': 'Practice Problems'})
+
 
 def get_timeline_df():
 
@@ -96,10 +98,9 @@ def get_timeline_df():
 
     condf = pd.concat([rdf, pdf]).fillna(0).convert_dtypes()
 
-    condf.loc[:, 'date'] = pd.to_datetime(condf.date).dt.date
+    tl_df = condf.groupby('date').sum().reset_index()
 
-    condf = condf.sort_values('date').reset_index(drop=True)
-
+    return tl_df.sort_values('date')
 
 
 def get_encoded_cols():
