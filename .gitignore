@@ -5,9 +5,13 @@
 *.json
 data/*
 
-# Cached Files
+# python files
 __pycache__/
+__init__.py
 
 # Jupyter Notebooks
 .ipynb_checkpoints
 README.ipynb
+
+#rando
+my_jobs/egg-info
