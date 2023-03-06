@@ -52,10 +52,8 @@ def get_ohe_df():
 
 def get_responses():
 
-    # select columns date_applied, initial_response, final_outcome
-    outcomes_df = jobs_df.loc[:, ['initial_response', 'final_outcome']].droplevel(level=0)
-    # sort by date and drop my indexes
-    outcomes_df = outcomes_df.sort_index().reset_index()
+    # sort by date
+    outcomes_df = jobs_df.sort_values('date_applied', ignore_index=True)
 
     # re-label final outcome by init and final responses
     for idx in outcomes_df.index:
@@ -67,9 +65,9 @@ def get_responses():
         elif row.initial_response == 'No Response':
             outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
 
-    outcomes_df = outcomes_df.drop(columns='initial_response')
+    slim_df = outcomes_df.loc[:, ['date_applied', 'final_outcome']]
 
-    grouped_df = outcomes_df.groupby('date_applied').value_counts().unstack(fill_value=0)
+    grouped_df = slim_df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
     responses_df = grouped_df.reset_index().reindex(columns=[
         'date_applied', 'Immediate Rejection', 'Rejected Post-Interview',
@@ -81,12 +79,9 @@ def get_responses():
 
 def get_prep_df():
 
-    cw_df = read_df('/codewars.json')
-    hr_df = read_df('/hackerrank.json')
+    prep_df = read_df('prep*').drop(columns='site')
 
-    data_df = pd.concat([cw_df, hr_df])
-
-    grouped_df = data_df.groupby('date_completed').count().reset_index()
+    grouped_df = prep_df.groupby('date_completed').count().reset_index()
 
     return grouped_df.rename(columns={'Submissions': 'Practice Problems'})
 
@@ -98,9 +93,9 @@ def get_timeline_df():
 
     condf = pd.concat([rdf, pdf]).fillna(0).convert_dtypes()
 
-    tl_df = condf.groupby('date').sum().reset_index()
+    tl_df = condf.groupby('date').sum().reset_index().sort_values('date')
 
-    return tl_df.sort_values('date')
+    return tl_df
 
 
 def get_encoded_cols():
