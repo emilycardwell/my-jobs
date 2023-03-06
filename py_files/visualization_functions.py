@@ -135,7 +135,7 @@ def show_apps_timeline():
 '''
 MULTIPLOTS
 '''
-def two_by_two_subplt():
+def show_subplt():
 
     cat_ser = get_slim_cats()
     loc_df = get_location_df()

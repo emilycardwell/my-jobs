@@ -23,16 +23,18 @@ READING & WRITING TO JSON
 def read_df(file_name=None):
     if file_name == None:
         file_name = get_file_ver()
+    else:
+        file_name = get_file_ver(file_name)
     file_path = data_path + file_name
-    jobs_df = pd.read_json(file_path, orient='table')
-    return jobs_df
+    new_df = pd.read_json(file_path, orient='table')
+    return new_df
 
-def add_to_json(new_jobs_df, show=None):
+def add_to_json(new_df, file_name='job_data', show=None):
 
-    fname = 'job_data' + date.today().strftime('%d_%m') + '.json'
+    fname = file_name + date.today().strftime('%d_%m') + '.json'
     filename = data_path + fname
 
-    result = new_jobs_df.to_json(orient='table')
+    result = new_df.to_json(orient='table')
     parsed = json.loads(result)
 
     with open(filename, "w") as jsonFile:
@@ -175,3 +177,8 @@ def add_final_response(company_name_like, final_outcome, feedback):
     data = [final_outcome, feedback]
 
     return update_add(app, cols, data)
+
+# ADD PREP DATA
+def add_prep():
+
+    return
