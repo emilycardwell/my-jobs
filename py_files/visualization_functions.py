@@ -104,7 +104,7 @@ def show_initial_responses():
 def show_apps_timeline():
 
     responses_df = get_responses()
-    feats = responses_df.drop(columns='date_applied')
+    feats = responses_df.copy().drop(columns='date_applied')
     dates = responses_df.date_applied
 
     cat_pal = sns.color_palette("viridis", 10)
@@ -124,6 +124,7 @@ def show_apps_timeline():
         )
         t_accum += feats[responses]
 
+    ax.set_xticks(dates)
     ax.set_xticklabels([pd.to_datetime(x).strftime('%b %-d') for x in dates])
     ax.set_xlabel('Date Applied')
 

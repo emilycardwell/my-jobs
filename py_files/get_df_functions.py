@@ -20,11 +20,11 @@ def get_slim_cats():
     cat_ser = jobs_df['job_cat']
     for x in range(len(cat_ser)):
         if 'Data Engineer' == cat_ser[x]:
-            cat_ser[x] = 'DE'
+            cat_ser.iloc[x] = 'DE'
         elif 'Data Analyst' == cat_ser[x]:
-            cat_ser[x] = 'DA'
+            cat_ser.iloc[x] = 'DA'
         elif 'Engineer' in cat_ser[x]:
-            cat_ser[x] = cat_ser[x].replace('Engineer', '')
+            cat_ser.iloc[x] = cat_ser[x].replace('Engineer', '')
 
     return cat_ser.sort_values()
 
@@ -102,7 +102,7 @@ def get_timeline_df():
 
 def get_encoded_cols():
     # slice and label encode features
-    X = jobs_df.loc[:, 'job_cat':'method']
+    X = jobs_df.loc[:, 'job_cat':'method'].copy()
     bi_columns = ['department', 'recruiter', 'referral', 'method']
     cat_columns = ['job_cat', 'location']
 
