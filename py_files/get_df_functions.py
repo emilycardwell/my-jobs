@@ -17,7 +17,7 @@ jobs_df = read_df()
 def get_slim_cats():
 
     # get reformatted categories column to fit on graphs
-    cat_ser = jobs_df['job_cat'].reset_index(drop=True)
+    cat_ser = jobs_df['job_cat']
     for x in range(len(cat_ser)):
         if 'Data Engineer' == cat_ser[x]:
             cat_ser[x] = 'DE'
@@ -31,8 +31,8 @@ def get_slim_cats():
 
 def get_ohe_df():
 
-    X = jobs_df.loc[:, ['initial_response']].reset_index('company_name', drop=True)
-    X = X.reset_index().sort_values('date_applied').reset_index(drop=True)
+    X = jobs_df.loc[:, ['date_applied', 'initial_response']]
+    X = X.sort_values('date_applied')
 
     gb_df = X.groupby('date_applied').value_counts().unstack(fill_value=0)
 
@@ -52,8 +52,10 @@ def get_ohe_df():
 
 def get_responses():
 
+    slim_df = jobs_df.loc[:, ['date_applied', 'initial_response', 'final_outcome']]
+
     # sort by date
-    outcomes_df = jobs_df.sort_values('date_applied', ignore_index=True)
+    outcomes_df = slim_df.sort_values('date_applied', ignore_index=True)
 
     # re-label final outcome by init and final responses
     for idx in outcomes_df.index:
@@ -65,14 +67,12 @@ def get_responses():
         elif row.initial_response == 'No Response':
             outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
 
-    slim_df = outcomes_df.loc[:, ['date_applied', 'final_outcome']]
+    outcomes_df.drop(columns=['initial_response'], inplace=True)
 
-    grouped_df = slim_df.groupby('date_applied').value_counts().unstack(fill_value=0)
+    grouped_df = outcomes_df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
-    responses_df = grouped_df.reset_index().reindex(columns=[
-        'date_applied', 'Immediate Rejection', 'Rejected Post-Interview',
-        'No Response', 'In Interviews'
-    ])
+    keys = ['date_applied', 'Immediate Rejection', 'Rejected Post-Interview', 'No Response', 'In Interviews']
+    responses_df = grouped_df.reset_index().reindex(columns=keys)
 
     return responses_df
 
@@ -93,14 +93,16 @@ def get_timeline_df():
 
     condf = pd.concat([rdf, pdf]).fillna(0).convert_dtypes()
 
-    tl_df = condf.groupby('date').sum().reset_index().sort_values('date')
+    grouped_df = condf.groupby('date').sum().reset_index().sort_values('date')
+
+    tl_df = grouped_df.set_index('date')
 
     return tl_df
 
 
 def get_encoded_cols():
     # slice and label encode features
-    X = jobs_df.loc[:, 'job_cat':'method'].reset_index(drop=True)
+    X = jobs_df.loc[:, 'job_cat':'method']
     bi_columns = ['department', 'recruiter', 'referral', 'method']
     cat_columns = ['job_cat', 'location']
 
@@ -130,7 +132,7 @@ def get_encoded_cols():
 
 def get_location_df():
 
-    X = jobs_df.loc[:, ['location', 'initial_response']].reset_index(drop=True)
+    X = jobs_df.loc[:, ['location', 'initial_response']]
 
     for idx, r in X.location.items():
         if 'remote' in r.lower():

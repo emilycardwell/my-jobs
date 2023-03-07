@@ -36,7 +36,7 @@ def show_pair():
 
 def show_cat_ref():
 
-    X = jobs_df.loc[:, ['job_cat', 'location', 'initial_response']].reset_index(drop=True)
+    X = jobs_df.loc[:, ['job_cat', 'location', 'initial_response']]
     X.loc[:, 'job_cat'] = get_slim_cats()
 
     for idx, r in X.location.items():
@@ -52,13 +52,13 @@ def show_cat_ref():
         size=10,
         hue="initial_response",
         palette=['black', 'silver', 'limegreen'],
-        ax=ax,
+        ax=ax
     )
 
     ax.set_title('Job Category, Location, & Initial Response')
     ax.set_xlabel('Category')
     ax.set_ylabel('Location')
-    ax.get_legend().remove()
+    # ax.get_legend().remove()
 
     return plt.show(fig)
 
@@ -103,31 +103,34 @@ def show_initial_responses():
 
 def show_apps_timeline():
 
-    responses_df = get_timeline_df()
-    cat_pal = sns.color_palette("viridis", 8)
-    cat_pal_list = [cat_pal[0], cat_pal[3], 'silver', cat_pal[7], 'gold']
-    t_accum = [0] * len(responses_df)
+    responses_df = get_responses()
+    feats = responses_df.drop(columns='date_applied')
+    dates = responses_df.date_applied
 
-    fig, ax = plt.subplots(figsize=(12,4))
+    cat_pal = sns.color_palette("viridis", 10)
+    cat_pal_list = [cat_pal[0], cat_pal[3], 'silver', cat_pal[9]]
+    t_accum = [0] * len(feats)
 
-    for responses, color in zip(responses_df.columns, cat_pal_list):
+    fig, ax = plt.subplots(figsize=(12,5))
+
+    for responses, color in zip(feats.columns, cat_pal_list):
         ax.bar(
-            x=responses_df.index,
-            height=list(responses_df[responses]),
+            x=dates,
+            height=list(feats[responses]),
             bottom=t_accum,
             width=1,
             label=responses,
             color=color
         )
-        t_accum += responses_df[responses]
+        t_accum += feats[responses]
 
-    # ax.set_xticks(x_tick_values)
-    # ax.set_xticklabels(x_tick_labels)
-    ax.set_ybound(0, 7)
+    ax.set_xticklabels([pd.to_datetime(x).strftime('%b %-d') for x in dates])
     ax.set_xlabel('Date Applied')
+
+    ax.set_ybound(0, 7)
     ax.set_ylabel('Count')
     ax.set_title('Dates Applied and Outcomes of Job Applications')
-    ax.legend(loc='upper center')
+    ax.legend(loc='upper right')
 
     return plt.show(fig)
 
@@ -187,8 +190,8 @@ def show_subplt():
 
     # timeline
     tl_df = get_timeline_df()
-    feats = tl_df.iloc[:, 1:]
-    x = list(tl_df.loc[:, 'date'])
+    feats = tl_df.reset_index(drop=True)
+    x = list(tl_df.index)
 
     cat_pal = sns.color_palette("Greens_r", 10)
     cat_pal_list = ['#0e2407', cat_pal[1], cat_pal[4], 'gold', cat_pal[8]]
