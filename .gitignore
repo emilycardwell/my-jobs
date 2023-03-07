@@ -1,17 +1,17 @@
-.envrc
-.env
-
 # Data Files
 *.json
 data/*
 
 # python files
 __pycache__/
-__init__.py
 
 # Jupyter Notebooks
 .ipynb_checkpoints
 README.ipynb
 
-# egg
-*.egg-info/
+# Personal Env
+.python-version
+requirements.txt
+.envrc
+.env
+setup.py
