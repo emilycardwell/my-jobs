@@ -11,7 +11,8 @@ from py_files.data_functions import read_df
 
 ''' GLOBAL VARIABLES '''
 jobs_df = read_df()
-
+unique_dates = sorted(list(set(jobs_df.date_applied)))
+string_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in unique_dates]
 
 ''' SHOWING GRAPHS '''
 def get_slim_cats():
@@ -20,11 +21,13 @@ def get_slim_cats():
     cat_ser = jobs_df['job_cat']
     for x in range(len(cat_ser)):
         if 'Data Engineer' == cat_ser[x]:
-            cat_ser.iloc[x] = 'DE'
+            cat_ser.iloc[x] = 'Data Engr.'
         elif 'Data Analyst' == cat_ser[x]:
-            cat_ser.iloc[x] = 'DA'
+            cat_ser.iloc[x] = 'Data An.'
+        # elif 'Python' in cat_ser[x]:
+        #     cat_ser.iloc[x] = 'Software'
         elif 'Engineer' in cat_ser[x]:
-            cat_ser.iloc[x] = cat_ser[x].replace('Engineer', '')
+            cat_ser.iloc[x] = cat_ser[x].replace('Engineer', 'Engr.')
 
     return cat_ser.sort_values()
 
@@ -32,12 +35,9 @@ def get_slim_cats():
 def get_ohe_df():
 
     X = jobs_df.loc[:, ['date_applied', 'initial_response']]
-    X = X.sort_values('date_applied')
+    X = X.sort_values('date_applied', ignore_index=True)
 
     gb_df = X.groupby('date_applied').value_counts().unstack(fill_value=0)
-
-    u_dates = sorted(list(set(X.date_applied)))
-    formatted_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in u_dates]
 
     r_dict = {
         'Rejected': list(gb_df['Rejected']),
@@ -45,10 +45,27 @@ def get_ohe_df():
         'Passed': list(gb_df['Passed'])
     }
 
-    r_df = pd.DataFrame(data=r_dict, index=formatted_dates)
+    r_df = pd.DataFrame(data=r_dict, index=string_dates)
 
-    return r_df, formatted_dates
+    return r_df
 
+def get_location_df():
+
+    X = jobs_df.loc[:, ['location', 'initial_response']]
+
+    for idx, r in X.location.items():
+        if 'remote' in r.lower():
+            X.loc[idx, 'location'] = 'Remote'
+        elif 'Germany' in r:
+            X.loc[idx, 'location'] = 'DE (not Berlin)'
+        elif 'Austria' in r:
+            X.loc[idx, 'location'] = 'Austria'
+        elif "Berlin" in r:
+            X.loc[idx, 'location'] = 'Berlin'
+        else:
+            X.loc[idx, 'location'] = 'Other'
+
+    return X
 
 def get_responses():
 
@@ -66,76 +83,84 @@ def get_responses():
             outcomes_df.loc[idx, ['final_outcome']] = 'Immediate Rejection'
         elif row.initial_response == 'No Response':
             outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
+        elif row.initial_response == 'Passed':
+            outcomes_df.loc[idx, ['final_outcome']] = 'In Interviews'
+        else:
+            print("error:", row.initial_response)
 
     outcomes_df.drop(columns=['initial_response'], inplace=True)
 
     grouped_df = outcomes_df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
-    keys = ['date_applied', 'Immediate Rejection', 'Rejected Post-Interview', 'No Response', 'In Interviews']
-    responses_df = grouped_df.reset_index().reindex(columns=keys)
+    keys = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview', 'In Interviews']
+    responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
 
     return responses_df
 
 
 def get_prep_df():
 
-    prep_df = read_df('prep*').drop(columns='site')
+    df = read_df('prep*').drop(columns='site')
 
-    grouped_df = prep_df.groupby('date_completed').count().reset_index()
+    grouped_df = df.groupby('date_completed').count().reset_index()
 
-    return grouped_df.rename(columns={'Submissions': 'Practice Problems'})
+    dates = grouped_df.date_completed.values
+
+    prep_df = pd.DataFrame({"Coding Practice": list(grouped_df["Submissions"])},
+                           index=dates)
+
+    return prep_df
 
 
 def get_timeline_df():
 
-    rdf = get_responses().rename(columns={'date_applied': 'date'})
-    pdf = get_prep_df().rename(columns={'date_completed': 'date'})
+    rdf = get_responses()
+    pdf = get_prep_df()
 
-    condf = pd.concat([rdf, pdf]).fillna(0).convert_dtypes()
+    jdf = rdf.join(pdf, how='outer').fillna(0).convert_dtypes().reset_index(names='Date')
 
-    grouped_df = condf.groupby('date').sum().reset_index().sort_values('date')
-
-    tl_df = grouped_df.set_index('date')
+    tl_df = jdf.set_index('Date')
 
     return tl_df
 
 
 def get_encoded_cols():
-    # slice and label encode features
-    X = jobs_df.loc[:, 'job_cat':'method'].copy()
+    # slice and binary features
     bi_columns = ['department', 'recruiter', 'referral', 'method']
-    cat_columns = ['job_cat', 'location']
+    X = jobs_df.loc[:, bi_columns].copy()
 
-    X.loc[X['method'] == 'linkedin', 'method'] = 0
-    for c in bi_columns:
-        X.loc[X[c].isna(), c] = 0
-        X.loc[X[c] != 0, c] = 1
+    # custom encode binary features
+    X.loc[X['method'] != 'linkedin', 'method'] = 'Referral/Web'
 
-    le = LabelEncoder()
-    for c in cat_columns:
-        X.loc[:, c] = le.fit_transform(X.loc[:, c])
+    X.loc[X['department'].isna(), 'department'] = 'Company-Wide'
+    X.loc[X['department'] != 'Company-Wide', 'department'] = 'Smaller Department'
 
-    # custom encode target (init. response)
-    y = jobs_df['initial_response'].reset_index(drop=True)
-    for idx, v in y.items():
-        if v == 'Rejected':
-            y[idx] = -1
-        elif v == 'No Response':
-            y[idx] = 0
-        else:
-            y[idx] = 1
+    for c in ['recruiter', 'referral']:
+        X.loc[X[c].isna(), c] = "No"
+        X.loc[X[c] != "No", c] = "Yes"
 
-    df = X.merge(y.to_frame('initial_response'), left_index=True, right_index=True)
+    # add named categorical features
+    X1 = get_location_df()
+    cats = get_slim_cats()
+    dates = jobs_df[['date_applied']]
+
+    df = dates.join(cats).join(X).join(X1)
 
     return df
 
+'''
+unused code for label encoder
+'''
+    # le = LabelEncoder()
+    # for c in cat_columns:
+    #     X.loc[:, c] = le.fit_transform(X.loc[:, c])
 
-def get_location_df():
-
-    X = jobs_df.loc[:, ['location', 'initial_response']]
-
-    for idx, r in X.location.items():
-        if 'remote' in r.lower():
-            X.loc[idx, 'location'] = 'Remote'
-
-    return X.sort_values('location').reset_index()
+    # # custom encode target (init. response)
+    # y = jobs_df['initial_response'].reset_index(drop=True)
+    # for idx, v in y.items():
+    #     if v == 'Rejected':
+    #         y[idx] = -1
+    #     elif v == 'No Response':
+    #         y[idx] = 0
+    #     else:
+    #         y[idx] = 1

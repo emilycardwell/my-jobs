@@ -4,8 +4,14 @@
 
 ## Visualizations
 
+#### Timeline
+![png](/README_files/timeline1.png)
+
+#### Comparing job location and job heirarchy to initial response
 ![png](/README_files/multiplot6.png)
 
+#### Comparing all categorical features to initial response
+![png](/README_files/catplot1.png)
 
 
 ## Python Files:
