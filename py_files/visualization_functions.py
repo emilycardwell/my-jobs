@@ -13,7 +13,8 @@ sns.set_theme(style='white')
 from py_files.data_functions import read_df
 from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
                                         get_responses, get_encoded_cols, \
-                                        get_location_df, get_timeline_df
+                                        get_location_df, get_timeline_df, \
+                                        get_outcomes
 
 
 ''' GLOBAL VARIABLES'''
@@ -82,40 +83,6 @@ def show_outcomes():
     return plt.show(o_fig)
 
 
-def show_timeline():
-    # timeline
-    tl_df = get_timeline_df()
-    feats = tl_df.reset_index(drop=True)
-    x = list(tl_df.index)
-
-    fig, ax = plt.subplots(figsize=(12,5))
-    cat_pal_list = [cat_pal[0], cat_pal[3], "maroon", cat_pal[8], 'silver']
-    t_accum = [0] * len(feats)
-
-    for col, color in zip(feats.columns, cat_pal_list):
-        ax.bar(
-            x=pd.to_datetime(x),
-            height=feats[col],
-            bottom=t_accum,
-            width=1,
-            label=col,
-            color=color
-        )
-        t_accum += feats[col]
-
-    xform = mpld.DateFormatter('%b %-d')
-    ax.xaxis.set_major_formatter(xform)
-    ax.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
-    ax.set_xlabel('Date Applied or Practice Problem Completed')
-
-    ax.set_ylim(top=10.5)
-    ax.set_ylabel('Count')
-    ax.set_title('Timeline of Job Applications and Coding Practice')
-    ax.legend(loc='upper right')
-
-    return plt.show(fig)
-
-
 
 '''
 MULTIPLOTS
@@ -175,6 +142,50 @@ def show_subplt():
     ax2_2.legend(loc='best')
 
     return plt.show()
+
+# timeline
+def show_timeline():
+
+    tl_df = get_timeline_df()
+    feats = tl_df.reset_index(drop=True)
+    x = list(tl_df.index)
+
+    fig = plt.figure(constrained_layout=True, figsize=(25,6))
+    spec = gs.GridSpec(ncols=4, nrows=1, figure=fig)
+    ax1 = fig.add_subplot(spec[0, 0:3])
+    ax1_1 = fig.add_subplot(spec[0, 3])
+
+    cat_pal_list = [cat_pal[0], cat_pal[3], "maroon", cat_pal[8], 'silver']
+    t_accum = [0] * len(feats)
+
+    for col, color in zip(feats.columns, cat_pal_list):
+        ax1.bar(
+            x=pd.to_datetime(x),
+            height=feats[col],
+            bottom=t_accum,
+            width=1,
+            label=col,
+            color=color
+        )
+        t_accum += feats[col]
+
+    xform = mpld.DateFormatter('%b %-d')
+    ax1.xaxis.set_major_formatter(xform)
+    ax1.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
+    ax1.set_xlabel('Date Applied or Practice Problem Completed')
+
+    ax1.set_ylim(top=10.5)
+    ax1.set_ylabel('Count')
+    ax1.set_title('Timeline of Job Applications and Coding Practice')
+    ax1.legend(loc='upper right')
+
+    totals_df = get_outcomes()
+    sns.countplot(totals_df, x='final_outcome', ax=ax1_1, width=.5,
+                  palette=[cat_pal[0], cat_pal[3], "maroon", cat_pal[8]])
+    ax1_1.set_title('Job Application Outcomes')
+    ax1_1.set_xlabel('')
+
+    return plt.show(fig)
 
 
 '''

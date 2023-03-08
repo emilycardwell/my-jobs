@@ -4,8 +4,11 @@
 
 ## Visualizations
 
-#### Timeline
-![png](/README_files/timeline1.png)
+#### Totals
+
+
+#### Timeline and Outcomes
+![png](/README_files/timeline2.png)
 
 #### Comparing job location and job heirarchy to initial response
 ![png](/README_files/multiplot8.png)

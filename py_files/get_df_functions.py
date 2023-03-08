@@ -69,6 +69,17 @@ def get_location_df():
 
 def get_responses():
 
+    df = get_outcomes()
+
+    grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
+
+    keys = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview', 'In Interviews']
+    responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
+
+    return responses_df
+
+def get_outcomes():
+
     slim_df = jobs_df.loc[:, ['date_applied', 'initial_response', 'final_outcome']]
 
     # sort by date
@@ -90,12 +101,7 @@ def get_responses():
 
     outcomes_df.drop(columns=['initial_response'], inplace=True)
 
-    grouped_df = outcomes_df.groupby('date_applied').value_counts().unstack(fill_value=0)
-
-    keys = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview', 'In Interviews']
-    responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
-
-    return responses_df
+    return outcomes_df
 
 
 def get_prep_df():
