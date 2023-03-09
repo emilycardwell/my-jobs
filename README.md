@@ -14,7 +14,7 @@
 ![png](/README_files/multiplot8.png)
 
 #### Comparing all categorical features to initial response
-![png](/README_files/catplot1.png)
+![png](/README_files/catplot2.png)
 
 
 ## Python Files:

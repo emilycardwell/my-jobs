@@ -21,8 +21,8 @@ from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
 jobs_df = read_df()
 cat_pal = sns.color_palette('viridis', 9, desat=.75)
 init_pal_list = [cat_pal[0], cat_pal[3], cat_pal[6]]
-cat_cols = ['date_applied', 'job_cat', 'location',
-            'department', 'recruiter', 'referral', 'method']
+cat_cols = ['job_cat', 'location', 'department', 'recruiter',
+            'referral', 'method', 'date_applied']
 
 '''
 SINGLE GRAPHS
@@ -199,7 +199,7 @@ def show_cat_compare(columns=cat_cols):
     fig_rows = 0
     fig_cols = 0
     for c in columns:
-        if c == cat_cols[0] or c == cat_cols[1] or c == cat_cols[2]:
+        if c == cat_cols[0] or c == cat_cols[1] or c == cat_cols[-1]:
             fig_rows += 1
         else:
             fig_cols += 1
@@ -214,23 +214,25 @@ def show_cat_compare(columns=cat_cols):
     for i in range(len(columns)):
         ax = f'ax{i}'
         c = columns[i]
-        if c == cat_cols[0] or c == cat_cols[1] or c == cat_cols[2]:
+
+        if c == cat_cols[0] or c == cat_cols[1] or c == cat_cols[-1]:
             myVars[ax] = fig.add_subplot(spec[r, :])
-            sns.countplot(
-                data=df, x=c, hue='initial_response',
-                palette=init_pal_list, ax=myVars[ax]
-            )
             r += 1
         else:
             myVars[ax] = fig.add_subplot(spec[r, k])
-            sns.countplot(
-                data=df, x=c, hue='initial_response',
-                palette=init_pal_list, ax=myVars[ax]
-            )
             k += 1
             if k == fig_cols:
                 r += 1
                 k = 0
+
+        sns.countplot(
+            data=df, x=c, hue='initial_response',
+            palette=init_pal_list, ax=myVars[ax]
+        )
+        myVars[ax].set_title(c)
+        myVars[ax].set_xlabel("")
+        if r != 1:
+            myVars[ax].legend_ = None
 
     return plt.show(fig)
 
