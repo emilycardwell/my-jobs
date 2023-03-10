@@ -4,9 +4,6 @@
 
 ## Visualizations
 
-#### Totals
-
-
 #### Timeline and Outcomes
 ![png](/README_files/timeline2.png)
 

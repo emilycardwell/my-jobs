@@ -9,44 +9,90 @@ import glob
 ''' GLOBAL VARIABLES'''
 data_path = os.getenv('DATA_PATH')
 index_cols = ['company_name', 'date_applied']
-
-def get_file_ver(file='job_data*'):
-    current_files = glob.glob(data_path + file)
-    latest_file = max(current_files, key=os.path.getctime)
-    fname = os.path.basename(latest_file)
-    return fname
+today = date.today().strftime("%Y-%m-%d")
 
 
 '''
 READING & WRITING TO JSON
 '''
-def read_df(file_name=None):
-    if file_name == None:
-        file_name = get_file_ver()
-    else:
-        file_name = get_file_ver(file_name)
-    file_path = data_path + file_name
+def read_df(file_name='job_data'):
+    file_path = data_path + file_name + '.json'
     new_df = pd.read_json(file_path, orient='table')
     return new_df
 
-def add_to_json(new_df, file_name='job_data', show=None):
+def verifty_data(new_df, old_fpath):
+    if os.path.exists(old_fpath):
+        old_json_df = pd.read_json(old_fpath, orient="table")
+        if len(old_json_df) > len(new_df):
+            x = input("Rows have been deleted, continue anyway? (y/n): ")
+            if x == 'y':
+                return 0
+            elif x == 'n':
+                return -1
+            else:
+                print("Incorrect input value")
+                return -1
+        elif old_json_df.isna().sum().sum() < new_df.isna().sum().sum():
+            z = input("Values have been deleted, continue anyway? (y/n): ")
+            if z == 'y':
+                return 0
+            elif z == 'n':
+                return -1
+            else:
+                print("Incorrect input value")
+                return -1
+    else:
+        print("No older files found.")
+        return 1
 
-    fname = file_name + date.today().strftime('%d_%m') + '.json'
-    filename = data_path + fname
+def add_to_json(new_df, file_name='job_data'):
 
+    # verify data
+    old_fpath = data_path + file_name + '.json'
+    verify = verifty_data(new_df, old_fpath)
+    if verify == -1:
+        return "Write to json stopped"
+
+    # create filepath
+    if verify == 1:
+        fname = file_name + '.json'
+    else:
+        fname = file_name + '_new' + '.json'
+    filepath = data_path + fname
+
+    # verify file path
+    if os.path.exists(filepath):
+        return f"File Error. Please rename {filepath}."
+
+    # load df to json
     result = new_df.to_json(orient='table')
     parsed = json.loads(result)
 
-    with open(filename, "w") as jsonFile:
+    # write to json
+    with open(filepath, "w") as jsonFile:
         json.dump(parsed, jsonFile, indent=4)
-        print(f'new data added sucessfully to {filename}')
+        print(f'new data added sucessfully to {filepath}')
 
-    jobs_df = pd.read_json(filename, orient='table')
+    # read from json
+    new_json_df = pd.read_json(filepath, orient='table')
 
-    if show:
-        return jobs_df.head(show)
+    # return if no older file exists
+    if verify == 1:
+        return new_json_df
+
+    # verify overwrite older file
+    print(new_json_df.info())
+    y = input("Would you like to overwrite the old file? (y/n): ")
+    if y == 'y':
+        os.rename(filepath, old_fpath)
+        print('file renamed: ', old_fpath)
     else:
-        return jobs_df
+        new_fname = input("New file name: ")
+        new_fpath = data_path + new_fname + '.json'
+        os.rename(filepath, new_fpath)
+        print('file renamed: ', new_fpath)
+
+    return new_json_df
 
 
 '''
@@ -60,17 +106,14 @@ def get_app_info(pattern):
     app_df = jobs_df.loc[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
     return app_df
 
-def make_df(cols, data):
-    ser = pd.DataFrame(data, index=cols)
-    df = ser.T.sort_values('company_name')
-    return df
+def add_rows(data, cols, file_name='job_data*', on='company_name'):
+    rows = pd.DataFrame.from_records(data, columns=cols)
 
-def concat_dfs(new_df):
+    old_df = read_df(file_name)
+    full_df = pd.concat([old_df, rows])
+    sorted_df = full_df.sort_values(on).reset_index(drop=True)
 
-    old_jobs_df = read_df()
-    new_jobs_df = pd.concat([old_jobs_df, new_df])
-
-    return new_jobs_df.sort_values('company_name').reset_index(drop=True)
+    return sorted_df
 
 def check_reg(a_index):
     l = len(list(a_index))
@@ -116,11 +159,10 @@ def add_app(company_name: str, date_applied: str, job_title: str,
         department, location, recruiter, referral, method, url, 'No Response'
     ]
 
-    app_df = make_df(app_columns, data)
-    jobs_df = concat_dfs(app_df)
-    new_jobs_df = add_to_json(jobs_df)
+    new_jobs_df = add_rows(data, app_columns, 'job_data*', 'company_name')
+    jobs_json_df = add_to_json(new_jobs_df)
 
-    return new_jobs_df.loc[new_jobs_df['company_name'] == company_name]
+    return jobs_json_df.loc[new_jobs_df['company_name'] == company_name]
 
 # ADD INITIAL RESPONSE
 def add_init_response(company_name_like,
@@ -179,6 +221,13 @@ def add_final_response(company_name_like, final_outcome, feedback):
     return update_add(app, cols, data)
 
 # ADD PREP DATA
-def add_prep():
+def add_prep(new_data, date=today):
+    prep_cols = ['site', 'submissions']
 
-    return
+    for r in new_data:
+        r.append(date)
+
+    prep_df = add_rows(new_data, prep_cols, "prep*", 'date_completed')
+    new_df = add_to_json(prep_df, "prep")
+
+    return new_df.loc[new_df['date_completed'] == date]

@@ -1,7 +1,5 @@
 ''' IMPORTS '''
 import pandas as pd
-from dateutil.relativedelta import relativedelta
-import math
 
 import matplotlib.dates as mpld
 import matplotlib.pyplot as plt
@@ -14,7 +12,7 @@ from py_files.data_functions import read_df
 from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
                                         get_responses, get_encoded_cols, \
                                         get_location_df, get_timeline_df, \
-                                        get_outcomes
+                                        get_outcomes, get_prep_df
 
 
 ''' GLOBAL VARIABLES'''
@@ -82,6 +80,24 @@ def show_outcomes():
 
     return plt.show(o_fig)
 
+def show_practice():
+
+    prep_df = get_prep_df()
+
+    fig, ax = plt.subplots(figsize=(12,4))
+
+    fig = prep_df.plot(
+        kind='bar',
+        colormap=lc(['lightsteelblue', 'wheat', 'silver', 'thistle']),
+        stacked=True,
+        xlabel='Date Completed',
+        title='Coding Practice Problems',
+        ax=ax,
+        width=.9
+    )
+    plt.xticks(rotation='horizontal')
+
+    return plt.show(fig)
 
 
 '''

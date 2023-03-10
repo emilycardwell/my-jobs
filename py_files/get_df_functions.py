@@ -103,8 +103,27 @@ def get_outcomes():
 
     return outcomes_df
 
-
 def get_prep_df():
+
+    df = read_df('prep*').drop(columns='submissions')
+
+    dates = sorted(list(set(df.date_completed)))
+    f_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in dates]
+
+    grouped_df = df.groupby('date_completed').value_counts().unstack(fill_value=0)
+
+    cols = sorted(list(df.site.unique()))
+    keys = [x.replace("_", "").capitalize() for x in cols]
+
+    prep_df = pd.DataFrame(
+        {keys[x]: list(grouped_df[cols[x]]) for x in range(len(cols))},
+        index=f_dates
+    )
+
+    return prep_df
+
+
+def get_slim_prep_df():
 
     df = read_df('prep*').drop(columns='site')
 
@@ -112,7 +131,7 @@ def get_prep_df():
 
     dates = grouped_df.date_completed.values
 
-    prep_df = pd.DataFrame({"Coding Practice": list(grouped_df["Submissions"])},
+    prep_df = pd.DataFrame({"Coding Practice": list(grouped_df["submissions"])},
                            index=dates)
 
     return prep_df
@@ -121,7 +140,7 @@ def get_prep_df():
 def get_timeline_df():
 
     rdf = get_responses()
-    pdf = get_prep_df()
+    pdf = get_slim_prep_df()
 
     jdf = rdf.join(pdf, how='outer').fillna(0).convert_dtypes().reset_index(names='Date')
 
