@@ -84,7 +84,7 @@ def show_practice():
 
     prep_df = get_prep_df()
 
-    fig, ax = plt.subplots(figsize=(12,4))
+    fig, ax = plt.subplots(figsize=(15,4))
 
     fig = prep_df.plot(
         kind='bar',

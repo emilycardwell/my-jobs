@@ -105,7 +105,7 @@ def get_outcomes():
 
 def get_prep_df():
 
-    df = read_df('prep*').drop(columns='submissions')
+    df = read_df('prep').drop(columns='submissions')
 
     dates = sorted(list(set(df.date_completed)))
     f_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in dates]
@@ -125,7 +125,7 @@ def get_prep_df():
 
 def get_slim_prep_df():
 
-    df = read_df('prep*').drop(columns='site')
+    df = read_df('prep').drop(columns='site')
 
     grouped_df = df.groupby('date_completed').count().reset_index()
 

@@ -5,13 +5,16 @@
 ## Visualizations
 
 #### Timeline and Outcomes
-![png](/README_files/timeline2.png)
+![png](/README_files/timeline3.png)
 
 #### Comparing job location and job heirarchy to initial response
-![png](/README_files/multiplot8.png)
+![png](/README_files/multiplot9.png)
 
 #### Comparing all categorical features to initial response
-![png](/README_files/catplot2.png)
+![png](/README_files/catplot3.png)
+
+#### Prep Dates/Counts
+![png](/README_files/practice.png)
 
 
 ## Python Files:
