@@ -224,6 +224,7 @@ def show_cat_compare(columns=cat_cols):
 
     fig = plt.figure(constrained_layout=True, figsize=(20,15))
     spec = gs.GridSpec(ncols=max(1, fig_cols), nrows=fig_rows, figure=fig)
+    outcomes_pal = [cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]]
 
     r = 0
     k = 0
@@ -242,8 +243,8 @@ def show_cat_compare(columns=cat_cols):
                 k = 0
 
         sns.countplot(
-            data=df, x=c, hue='initial_response',
-            palette=init_pal_list, ax=myVars[ax]
+            data=df, x=c, hue='final_outcome',
+            palette=outcomes_pal, ax=myVars[ax]
         )
         myVars[ax].set_title(c)
         myVars[ax].set_xlabel("")

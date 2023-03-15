@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 from datetime import date
-import glob
+from IPython.display import display
 
 
 ''' GLOBAL VARIABLES'''
@@ -32,7 +32,9 @@ def verifty_data(new_df, old_fpath):
             else:
                 print("Incorrect input value")
                 return -1
-        elif old_json_df.isna().sum().sum() < new_df.isna().sum().sum():
+
+        elif old_json_df.isna().sum().sum() < new_df.isna().sum().sum() \
+            and len(old_json_df) == len(new_df):
             z = input("Values have been deleted, continue anyway? (y/n): ")
             if z == 'y':
                 return 0
@@ -45,7 +47,7 @@ def verifty_data(new_df, old_fpath):
         print("No older files found.")
         return 1
 
-def add_to_json(new_df, file_name='job_data'):
+def add_to_json(new_df, company_name, file_name='job_data'):
 
     # verify data
     old_fpath = data_path + file_name + '.json'
@@ -81,7 +83,7 @@ def add_to_json(new_df, file_name='job_data'):
         return new_json_df
 
     # verify overwrite older file
-    print(new_json_df.info())
+    display(new_json_df.loc[new_json_df['company_name'] == company_name])
     y = input("Would you like to overwrite the old file? (y/n): ")
     if y == 'y':
         os.rename(filepath, old_fpath)
@@ -98,16 +100,16 @@ def add_to_json(new_df, file_name='job_data'):
 '''
 UTILS
 '''
-def get_app_info(pattern):
-    jobs_df = read_df()
+def get_app_info(pattern, file_name='job_data'):
+    jobs_df = read_df(file_name)
     l = pattern.lower()
     u = pattern.upper()
     c = pattern.capitalize()
     app_df = jobs_df.loc[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
     return app_df
 
-def add_rows(data, cols, file_name='job_data*', on='company_name'):
-    rows = pd.DataFrame.from_records(data, columns=cols)
+def add_rows(data, cols, file_name='job_data', on='company_name'):
+    rows = pd.DataFrame([data], columns=cols)
 
     old_df = read_df(file_name)
     full_df = pd.concat([old_df, rows])
@@ -127,17 +129,17 @@ def check_reg(a_index):
     else:
         return 1
 
-def update_add(app, cols, data):
+def update_add(app, cols, data, file_name='job_data'):
     company_name = app['company_name'].values[0]
 
     for i, c in enumerate(cols):
         app.loc[:, c] = data[i]
 
-    old_jobs_df = read_df()
+    old_jobs_df = read_df(file_name)
     old_jobs_df.loc[old_jobs_df['company_name'] == company_name] = app
-    new_jobs_df = add_to_json(old_jobs_df)
+    new_jobs_df = add_to_json(old_jobs_df, company_name)
 
-    return new_jobs_df.loc[new_jobs_df['company_name'] == company_name]
+    return old_jobs_df.compare(new_jobs_df)
 
 
 '''
@@ -159,15 +161,16 @@ def add_app(company_name: str, date_applied: str, job_title: str,
         department, location, recruiter, referral, method, url, 'No Response'
     ]
 
-    new_jobs_df = add_rows(data, app_columns, 'job_data*', 'company_name')
-    jobs_json_df = add_to_json(new_jobs_df)
+    new_jobs_df = add_rows(data, app_columns, 'job_data', 'company_name')
+    jobs_json_df = add_to_json(new_jobs_df, company_name)
 
-    return jobs_json_df.loc[new_jobs_df['company_name'] == company_name]
+    return jobs_json_df.info(verbose=False)
 
 # ADD INITIAL RESPONSE
 def add_init_response(company_name_like,
                       initial_response, date_init_resp,
-                      date_interview1=None, interviewers=None):
+                      date_interview1=None, interviewers=None,
+                      file_name='job_data'):
 
     app = get_app_info(company_name_like)
     cr = check_reg(app.index)
@@ -186,11 +189,13 @@ def add_init_response(company_name_like,
     else:
         return "Error, invalid initial response (Passed/Rejected)"
 
-    return update_add(app, cols, data)
+    return update_add(app, cols, data, file_name)
 
 # ADD INTERVIEW INFO
-def add_interview_info(company_name_like, interview_notes, next_steps):
-    app = get_app_info(company_name_like)
+def add_interview_info(company_name_like, interview_notes, next_steps,
+                      file_name='job_data'):
+
+    app = get_app_info(company_name_like, file_name)
     cr = check_reg(app.index)
     if cr == 0:
         return
@@ -198,19 +203,23 @@ def add_interview_info(company_name_like, interview_notes, next_steps):
     cols = ['interview_notes', 'next_steps']
     data = [interview_notes, next_steps]
 
-    return update_add(app, cols, data)
+    return update_add(app, cols, data, file_name)
 
 # ADD MORE INTERVIEW NOTES/DATES
-def add_more_ints(company_name_like, next_interviews):
-    app = get_app_info(company_name_like)
+def add_more_ints(company_name_like, next_interviews,
+                      file_name='job_data'):
+
+    app = get_app_info(company_name_like, file_name)
     cr = check_reg(app.index)
     if cr == 0:
         return
-    return update_add(app, ['next_interviews'], [next_interviews])
+    return update_add(app, ['next_interviews'], [next_interviews], file_name)
 
 # ADD FINAL RESPONSE
-def add_final_response(company_name_like, final_outcome, feedback):
-    app = get_app_info(company_name_like)
+def add_final_response(company_name_like, final_outcome, feedback,
+                      file_name='job_data'):
+
+    app = get_app_info(company_name_like, file_name)
     cr = check_reg(app.index)
     if cr == 0:
         return
@@ -218,16 +227,17 @@ def add_final_response(company_name_like, final_outcome, feedback):
     cols = ['final_outcome', 'feedback']
     data = [final_outcome, feedback]
 
-    return update_add(app, cols, data)
+    return update_add(app, cols, data, file_name)
 
 # ADD PREP DATA
-def add_prep(new_data, date=today):
+def add_prep(new_data, date=today, file_name='job_data'):
+
     prep_cols = ['site', 'submissions']
 
     for r in new_data:
         r.append(date)
 
-    prep_df = add_rows(new_data, prep_cols, "prep*", 'date_completed')
-    new_df = add_to_json(prep_df, "prep")
+    prep_df = add_rows(new_data, prep_cols, "prep", 'date_completed')
+    new_df = add_to_json(prep_df, file_name="prep")
 
-    return new_df.loc[new_df['date_completed'] == date]
+    return new_df.info(verbose=False)

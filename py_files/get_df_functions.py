@@ -165,11 +165,11 @@ def get_encoded_cols():
         X.loc[X[c] != "No", c] = "Yes"
 
     # add named categorical features
-    X1 = get_location_df()
+    X1 = get_location_df().drop(columns='initial_response')
     cats = get_slim_cats()
-    dates = jobs_df[['date_applied']]
+    outcomes = get_outcomes()
 
-    df = dates.join(cats).join(X).join(X1)
+    df = X.join(cats).join(X1).join(outcomes)
 
     return df
 
