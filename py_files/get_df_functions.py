@@ -6,7 +6,7 @@ GET ALL GRAPHS AS SUBPLOTS
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-from py_files.data_functions import read_df
+from py_files.data_functions import read_df, get_outcomes
 
 
 ''' GLOBAL VARIABLES '''
@@ -67,9 +67,10 @@ def get_location_df():
 
     return X
 
+
 def get_responses():
 
-    df = get_outcomes()
+    df = get_outcomes().reset_index()
 
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
@@ -77,31 +78,6 @@ def get_responses():
     responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
 
     return responses_df
-
-def get_outcomes():
-
-    slim_df = jobs_df.loc[:, ['date_applied', 'initial_response', 'final_outcome']]
-
-    # sort by date
-    outcomes_df = slim_df.sort_values('date_applied', ignore_index=True)
-
-    # re-label final outcome by init and final responses
-    for idx in outcomes_df.index:
-        row = outcomes_df.loc[idx]
-        if row.final_outcome == 'Rejected' and row.initial_response == "Passed":
-            outcomes_df.loc[idx, ['final_outcome']] = 'Rejected Post-Interview'
-        elif row.initial_response == 'Rejected':
-            outcomes_df.loc[idx, ['final_outcome']] = 'Immediate Rejection'
-        elif row.initial_response == 'No Response':
-            outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
-        elif row.initial_response == 'Passed':
-            outcomes_df.loc[idx, ['final_outcome']] = 'In Interviews'
-        else:
-            print("error:", row.initial_response)
-
-    outcomes_df.drop(columns=['initial_response'], inplace=True)
-
-    return outcomes_df
 
 def get_prep_df():
 
