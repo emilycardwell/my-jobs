@@ -49,9 +49,9 @@ def verifty_data(new_df, old_fpath):
 
 def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='jobs'):
 
-    # add final outcomes (if not present)
-    outcomes_ser = get_outcomes(new_df).final_outcome.sort_index()
-    new_df.loc[:, 'final_outcome'] = outcomes_ser
+    # # add final outcomes
+    # outcomes_ser = get_outcomes(new_df).final_outcome.sort_index()
+    # new_df.loc[:, 'final_outcome'] = outcomes_ser
 
     # verify data
     old_fpath = data_path + file_name + '.json'
@@ -119,13 +119,10 @@ def get_app_info(pattern, file_name='jobs'):
     app_df = jobs_df.loc[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
     return app_df
 
-def add_rows(data, cols, file_name='jobs', on='company_name'):
-    rows = pd.DataFrame([data], columns=cols)
-
+def add_row(new_row, file_name='jobs', on='company_name'):
     old_df = read_df(file_name)
-    full_df = pd.concat([old_df, rows])
+    full_df = pd.concat([old_df, new_row])
     sorted_df = full_df.sort_values(on).reset_index(drop=True)
-
     return sorted_df
 
 def check_reg(a_index):
@@ -153,33 +150,6 @@ def update_add(idx, app, cols, data, file_name='jobs'):
 
     return old_jobs_df.compare(new_jobs_df)
 
-def get_outcomes(jobs_df=read_df()):
-
-    slim_df = jobs_df.loc[:, ['date_applied', 'company_name', 'initial_response', 'final_outcome']]
-
-    # sort by date
-    outcomes_df = slim_df.sort_values('date_applied')
-
-    # re-label final outcome by init and final responses
-    for idx in outcomes_df.index:
-        row = outcomes_df.loc[idx]
-        if row.final_outcome != 'Offer':
-            pass
-        elif row.final_outcome == 'Rejected' and row.initial_response == "Passed":
-            outcomes_df.loc[idx, ['final_outcome']] = 'Rejected Post-Interview'
-        elif row.initial_response == 'Rejected':
-            outcomes_df.loc[idx, ['final_outcome']] = 'Immediate Rejection'
-        elif row.initial_response == 'No Response':
-            outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
-        elif row.initial_response == 'Passed':
-            outcomes_df.loc[idx, ['final_outcome']] = 'In Interviews'
-        else:
-            print("error:", row.initial_response)
-
-    outcomes_df.drop(columns=['initial_response'], inplace=True)
-
-    return outcomes_df
-
 
 '''
 WRITING DATA
@@ -191,15 +161,16 @@ def add_app(date_applied, company_name, job_title, job_cat, department,
     app_columns = [
         'date_applied', 'company_name', 'job_title',
         'job_cat', 'department', 'location', 'recruiter',
-        'referral', 'method', 'url', 'initial_response'
+        'referral', 'method', 'url', 'initial_response', 'final_outcome'
     ]
 
     data = [
         date_applied, company_name, job_title, job_cat, department,
-        location, recruiter, referral, method, url, 'No Response'
+        location, recruiter, referral, method, url, 'No Response', 'No Response'
     ]
 
-    new_jobs_df = add_rows(data, app_columns)
+    new_row = pd.DataFrame([data], columns=app_columns)
+    new_jobs_df = add_row(new_row)
     jobs_json_df = add_to_json(new_jobs_df, comp_name=company_name)
 
     return jobs_json_df.info(verbose=False)
@@ -222,14 +193,14 @@ def add_init_response(company_name_like,
     idx = row.name
 
     if initial_response == 'Rejected':
-        cols = ['date_init_resp', 'initial_response']
-        data = [date_init_resp, initial_response]
+        cols = ['date_init_resp', 'initial_response', 'final_outcome']
+        data = [date_init_resp, initial_response, 'Immediate Rejection']
 
     elif initial_response == 'Passed':
         cols = ['date_init_resp', 'initial_response',
-                'date_interview1', 'interviewers']
+                'date_interview1', 'interviewers', 'final_outcome']
         data = [date_init_resp, initial_response,
-                date_interview1, interview1_details]
+                date_interview1, interview1_details, 'In Interviews']
     else:
         return "Error, invalid initial response (Passed/Rejected)"
 
@@ -257,7 +228,7 @@ def add_more_ints(company_name_like, int_no,
     return update_add(idx, row, cols, data, file_name)
 
 # ADD FINAL RESPONSE
-def add_final_response(company_name_like, final_outcome, feedback,
+def add_final_outcome(company_name_like, final_outcome, feedback,
                       file_name='jobs'):
 
     app = get_app_info(company_name_like, file_name)
@@ -268,6 +239,10 @@ def add_final_response(company_name_like, final_outcome, feedback,
         row = app.loc[cr]
     else:
         row = app.loc[app.index[0]]
+
+    while final_outcome not in ['Rejected Post-Interview', 'Offer']:
+        final_outcome = input("Error, invalid final outcome. Enter valid response: \
+             (Rejected Post-Interview/Offer)")
 
     idx = row.name
     cols = ['final_outcome', 'feedback']
@@ -284,7 +259,8 @@ def add_prep(new_data, date=today):
     for r in new_data:
         r.append(date)
 
-    prep_df = add_rows(new_data, prep_cols, "prep", 'date_completed')
+    new_row = pd.DataFrame([new_data], columns=prep_cols)
+    prep_df = add_row(new_row, "prep", 'date_completed')
     new_df = add_to_json(prep_df, date_comp='date_completed', file_name='prep')
 
     return new_df.info(verbose=False)

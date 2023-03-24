@@ -21,6 +21,8 @@ cat_pal = sns.color_palette('viridis', 9, desat=.75)
 init_pal_list = [cat_pal[0], cat_pal[3], cat_pal[6]]
 cat_cols = ['job_cat', 'location', 'department', 'recruiter',
             'referral', 'method', 'date_applied']
+hue_order = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview',
+             'In Interviews']
 
 '''
 SINGLE GRAPHS
@@ -243,7 +245,7 @@ def show_cat_compare(columns=cat_cols):
                 k = 0
 
         sns.countplot(
-            data=df, x=c, hue='final_outcome',
+            data=df, x=c, hue='final_outcome', hue_order=hue_order,
             palette=outcomes_pal, ax=myVars[ax]
         )
         myVars[ax].set_title(c)

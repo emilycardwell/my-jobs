@@ -6,7 +6,7 @@ GET ALL GRAPHS AS SUBPLOTS
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-from py_files.data_functions import read_df, get_outcomes
+from py_files.data_functions import read_df
 
 
 ''' GLOBAL VARIABLES '''
@@ -51,13 +51,13 @@ def get_ohe_df():
 
 def get_location_df():
 
-    X = jobs_df.loc[:, ['location', 'initial_response']]
+    X = jobs_df.loc[:, ['location']]
 
     for idx, r in X.location.items():
         if 'remote' in r.lower():
             X.loc[idx, 'location'] = 'Remote'
         elif 'Germany' in r:
-            X.loc[idx, 'location'] = 'DE (not Berlin)'
+            X.loc[idx, 'location'] = 'Germany'
         elif 'Austria' in r:
             X.loc[idx, 'location'] = 'Austria'
         elif "Berlin" in r:
@@ -67,11 +67,14 @@ def get_location_df():
 
     return X
 
+def get_outcomes(jobs_df=read_df()):
+    slim_df = jobs_df.loc[:, ['date_applied', 'final_outcome']]
+    outcomes_df = slim_df.sort_values('date_applied')
+    return outcomes_df
 
 def get_responses():
 
-    df = get_outcomes().reset_index()
-
+    df = get_outcomes()
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
     keys = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview', 'In Interviews']
@@ -141,7 +144,7 @@ def get_encoded_cols():
         X.loc[X[c] != "No", c] = "Yes"
 
     # add named categorical features
-    X1 = get_location_df().drop(columns='initial_response')
+    X1 = get_location_df()
     cats = get_slim_cats()
     outcomes = get_outcomes()
 
@@ -165,3 +168,33 @@ unused code for label encoder
     #         y[idx] = 0
     #     else:
     #         y[idx] = 1
+
+'''
+replaced with shorter code
+'''
+# def get_outcomes(jobs_df=read_df()):
+
+#     slim_df = jobs_df.loc[:, ['date_applied', 'company_name', 'initial_response', 'final_outcome']]
+
+#     # sort by date
+#     outcomes_df = slim_df.sort_values('date_applied')
+
+#     # re-label final outcome by init and final responses
+#     for idx in outcomes_df.index:
+#         row = outcomes_df.loc[idx]
+#         if row.final_outcome != 'Offer':
+#             pass
+#         elif row.final_outcome == 'Rejected' and row.initial_response == "Passed":
+#             outcomes_df.loc[idx, ['final_outcome']] = 'Rejected Post-Interview'
+#         elif row.initial_response == 'Rejected':
+#             outcomes_df.loc[idx, ['final_outcome']] = 'Immediate Rejection'
+#         elif row.initial_response == 'No Response':
+#             outcomes_df.loc[idx, ['final_outcome']] = 'No Response'
+#         elif row.initial_response == 'Passed':
+#             outcomes_df.loc[idx, ['final_outcome']] = 'In Interviews'
+#         else:
+#             print("error:", row.initial_response)
+
+#     outcomes_df.drop(columns=['initial_response'], inplace=True)
+
+#     return outcomes_df
