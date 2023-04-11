@@ -109,7 +109,8 @@ def show_subplt():
 
     cat_ser = get_slim_cats()
     loc_df = get_location_df()
-    X = loc_df.join(cat_ser)
+    out_df = get_outcomes()
+    X = loc_df.join(cat_ser).join(out_df).drop(columns="date_applied")
 
     # set figure
     fig = plt.figure(constrained_layout=True, figsize=(20,10))
@@ -134,13 +135,13 @@ def show_subplt():
         data=X,
         ax=ax2,
         x="location",
-        hue="initial_response",
+        hue="final_outcome",
         palette=init_pal_list,
         width=.5,
         # saturation=1
     )
 
-    ax2.set_title('Location & Initial Responses')
+    ax2.set_title('Location & Outcomes')
     ax2.set_xlabel('')
     ax2.legend(loc='upper right')
 
@@ -149,13 +150,13 @@ def show_subplt():
         data=X.sort_values('job_cat'),
         ax=ax2_2,
         x="job_cat",
-        hue="initial_response",
+        hue="final_outcome",
         palette=init_pal_list,
         width=.5,
         # saturation=1
     )
 
-    ax2_2.set_title('Job Type & Initial Responses')
+    ax2_2.set_title('Job Type & Outcomes')
     ax2_2.set_xlabel('')
     ax2_2.legend(loc='best')
 
