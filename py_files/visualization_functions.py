@@ -66,7 +66,7 @@ def show_outcomes():
         [str(pd.to_datetime(x).strftime('%b %-d')) for x in responses_df.index]
 
     o_fig, ax = plt.subplots(figsize=(10,4))
-    
+
     if len(responses_df.columns) == 4:
         cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]])
     else:
@@ -178,7 +178,7 @@ def show_timeline():
     ax1 = fig.add_subplot(spec[0, 0:3])
     ax1_1 = fig.add_subplot(spec[0, 3])
 
-    cat_pal_list = [cat_pal[0], cat_pal[3], "maroon", cat_pal[8], 'silver']
+    cat_pal_list = [cat_pal[0], cat_pal[3], "maroon", cat_pal[7], cat_pal[8]]
     t_accum = [0] * len(feats)
 
     for col, color in zip(feats.columns, cat_pal_list):
@@ -204,7 +204,7 @@ def show_timeline():
 
     totals_df = get_outcomes()
     sns.countplot(totals_df, x='final_outcome', ax=ax1_1, width=.5,
-                  palette=[cat_pal[0], cat_pal[3], "maroon", cat_pal[8]])
+                  palette=cat_pal_list)
     ax1_1.set_title('Job Application Outcomes')
     ax1_1.set_xlabel('')
 

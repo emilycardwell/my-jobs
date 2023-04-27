@@ -17,10 +17,14 @@ READING & WRITING TO JSON
 '''
 def read_df(file_name='jobs'):
     file_path = data_path + file_name + '.json'
-    new_df = pd.read_json(file_path, orient='table')
+    try:
+        new_df = pd.read_json(file_path, orient='table')
+    except FileNotFoundError:
+        new_df = pd.DataFrame()
+
     return new_df
 
-def verifty_data(new_df, old_fpath):
+def verify_data(new_df, old_fpath):
     if os.path.exists(old_fpath):
         old_json_df = pd.read_json(old_fpath, orient="table")
         if len(old_json_df) > len(new_df):
@@ -55,7 +59,7 @@ def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='job
 
     # verify data
     old_fpath = data_path + file_name + '.json'
-    verify = verifty_data(new_df, old_fpath)
+    verify = verify_data(new_df, old_fpath)
     if verify == -1:
         return "Write to json stopped"
 
@@ -272,7 +276,6 @@ def add_work(new_data):
     work_cols = ['job', 'category', 'date']
 
     new_row = pd.DataFrame(new_data, columns=work_cols)
-    return new_row
     work_df = add_row(new_row, file_name="work", on='date')
     new_df = add_to_json(work_df, file_name='work')
 

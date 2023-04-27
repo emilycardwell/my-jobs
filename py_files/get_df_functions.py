@@ -119,14 +119,30 @@ def get_slim_prep_df():
     return prep_df
 
 
+def get_work_df():
+
+    df = read_df('work').drop(columns='category')
+
+    grouped_df = df.groupby('date_of_job').count().reset_index()
+
+    dates = grouped_df.date_of_job.values
+
+    work_df = pd.DataFrame({"Work": list(grouped_df["job"])},
+                           index=dates)
+
+    return work_df
+
 def get_timeline_df():
 
     rdf = get_responses()
     pdf = get_slim_prep_df()
+    wdf = get_work_df()
 
-    jdf = rdf.join(pdf, how='outer').fillna(0).convert_dtypes().reset_index(names='Date')
+    jdf = pd.merge(rdf, pdf, how='outer', left_index=True, right_index=True)
+    jdf2 = pd.merge(jdf, wdf, how='outer', left_index=True, right_index=True)
+    filled_df = jdf2.fillna(0).convert_dtypes().reset_index(names='Date')
 
-    tl_df = jdf.set_index('Date')
+    tl_df = filled_df.set_index('Date')
 
     return tl_df
 
