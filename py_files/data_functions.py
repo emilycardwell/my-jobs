@@ -264,3 +264,16 @@ def add_prep(new_data, date=today):
     new_df = add_to_json(prep_df, date_comp='date_completed', file_name='prep')
 
     return new_df.info(verbose=False)
+
+
+# ADD WORK DATA
+def add_work(new_data):
+
+    work_cols = ['job', 'category', 'date']
+
+    new_row = pd.DataFrame(new_data, columns=work_cols)
+    return new_row
+    work_df = add_row(new_row, file_name="work", on='date')
+    new_df = add_to_json(work_df, file_name='work')
+
+    return new_df.info(verbose=False)

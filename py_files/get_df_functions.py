@@ -4,7 +4,7 @@ GET ALL GRAPHS AS SUBPLOTS
 
 ''' IMPORTS '''
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+# from sklearn.preprocessing import LabelEncoder
 
 from py_files.data_functions import read_df
 
@@ -78,7 +78,10 @@ def get_responses():
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
     keys = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview', 'In Interviews']
-    responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
+    try:
+        responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
+    except KeyError:
+        responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys[:3]}, index=unique_dates)
 
     return responses_df
 

@@ -66,7 +66,11 @@ def show_outcomes():
         [str(pd.to_datetime(x).strftime('%b %-d')) for x in responses_df.index]
 
     o_fig, ax = plt.subplots(figsize=(10,4))
-    cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]])
+    
+    if len(responses_df.columns) == 4:
+        cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]])
+    else:
+        cmap = lc([cat_pal[0], cat_pal[3], 'maroon'])
 
     o_fig = responses_df.plot(
         kind='bar',
