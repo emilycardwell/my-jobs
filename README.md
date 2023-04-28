@@ -1,6 +1,6 @@
-# My Job Applications 2023
+# Job Application Data
 
-Collecting, examining, and visualizing information taken from job applications.
+Collecting, examining, and visualizing data from my job search in 2023.
 
 ***
 
