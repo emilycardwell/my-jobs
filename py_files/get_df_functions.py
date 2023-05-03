@@ -4,6 +4,7 @@ GET ALL GRAPHS AS SUBPLOTS
 
 ''' IMPORTS '''
 import pandas as pd
+import numpy as np
 # from sklearn.preprocessing import LabelEncoder
 
 from py_files.data_functions import read_df
@@ -77,11 +78,18 @@ def get_responses():
     df = get_outcomes()
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
-    keys = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview', 'In Interviews']
-    try:
-        responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
-    except KeyError:
-        responses_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys[:3]}, index=unique_dates)
+    all_keys = ['No Response', 'Immediate Rejection', 'Rejected Post-Interview',
+                    'In Interviews', 'Offer']
+
+    keys = list(grouped_df.keys())
+    nan_keys = list(set(all_keys) - set(keys))
+
+    available_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
+
+    if nan_keys:
+        nan_df = pd.DataFrame({x: len(available_df)*[0] for x in nan_keys}, index=unique_dates)
+
+    responses_df = pd.concat([available_df, nan_df], axis=1)
 
     return responses_df
 
@@ -127,8 +135,7 @@ def get_work_df():
 
     dates = grouped_df.date_of_job.values
 
-    work_df = pd.DataFrame({"Work": list(grouped_df["job"])},
-                           index=dates)
+    work_df = pd.DataFrame({"Work": list(grouped_df["job"])}, index=dates)
 
     return work_df
 

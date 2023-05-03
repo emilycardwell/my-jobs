@@ -12,7 +12,7 @@ from py_files.data_functions import read_df
 from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
                                         get_responses, get_encoded_cols, \
                                         get_location_df, get_timeline_df, \
-                                        get_outcomes, get_prep_df
+                                        get_outcomes, get_prep_df, get_work_df
 
 
 ''' GLOBAL VARIABLES'''
@@ -94,13 +94,38 @@ def show_practice():
 
     fig = prep_df.plot(
         kind='bar',
-        colormap=lc(['lightsteelblue', 'wheat', 'silver', 'thistle']),
+        colormap=lc(['silver', 'wheat', 'lightgrey', 'thistle']),
         stacked=True,
         xlabel='Date Completed',
         title='Coding Practice Problems',
         ax=ax,
         width=.9
     )
+    plt.xticks(rotation='horizontal')
+
+    return plt.show(fig)
+
+def show_work():
+
+    work_df = get_work_df()
+
+    fig, ax = plt.subplots(figsize=(15,4))
+
+    fig = work_df.plot(
+        kind='bar',
+        colormap=lc(['lightsteelblue']),
+        stacked=True,
+        xlabel='Date Completed',
+        title='Coding Practice Problems',
+        ax=ax,
+        width=.9
+    )
+
+    xform = mpld.DateFormatter('%b %-d')
+    ax.xaxis.set_major_formatter(xform)
+    ax.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
+    ax.set_ylim(top=5)
+
     plt.xticks(rotation='horizontal')
 
     return plt.show(fig)
@@ -178,7 +203,10 @@ def show_timeline():
     ax1 = fig.add_subplot(spec[0, 0:3])
     ax1_1 = fig.add_subplot(spec[0, 3])
 
-    cat_pal_list = [cat_pal[0], cat_pal[3], "maroon", cat_pal[7], cat_pal[8]]
+    cat_pal_list = [cat_pal[0], cat_pal[1], cat_pal[3],
+                    cat_pal[7], cat_pal[8],
+                    "thistle", "lightsteelblue"]
+
     t_accum = [0] * len(feats)
 
     for col, color in zip(feats.columns, cat_pal_list):
@@ -206,6 +234,7 @@ def show_timeline():
     sns.countplot(totals_df, x='final_outcome', ax=ax1_1, width=.5,
                   palette=cat_pal_list)
     ax1_1.set_title('Job Application Outcomes')
+    ax1_1.set_label(totals_df.final_outcome)
     ax1_1.set_xlabel('')
 
     return plt.show(fig)
