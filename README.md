@@ -7,7 +7,7 @@ Collecting, examining, and visualizing data from my job search in 2023.
 ## Visualizations
 
 #### Timeline and Outcomes
-![png](/README_files/timeline3.png)
+![png](/README_files/timeline4.png)
 
 #### Comparing job location and job category to initial response
 ![png](/README_files/location_type_outcomes.png)
