@@ -42,7 +42,7 @@ def show_initial_responses():
 
     r_df= get_ohe_df()
 
-    r_fig, ax = plt.subplots(figsize=(10,4))
+    r_fig, ax = plt.subplots(figsize=(12,4))
     cmap = lc(init_pal_list)
 
     r_fig = r_df.plot(
@@ -65,7 +65,7 @@ def show_outcomes():
     responses_df.index = \
         [str(pd.to_datetime(x).strftime('%b %-d')) for x in responses_df.index]
 
-    o_fig, ax = plt.subplots(figsize=(10,4))
+    o_fig, ax = plt.subplots(figsize=(12,4))
 
     if len(responses_df.columns) == 4:
         cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]])
@@ -228,7 +228,7 @@ def show_timeline():
     ax1.set_ylim(top=10.5)
     ax1.set_ylabel('Count')
     ax1.set_title('Timeline of Job Applications and Coding Practice')
-    ax1.legend(loc='upper right')
+    ax1.legend(loc='upper center')
 
     totals_df = get_outcomes()
     sns.countplot(totals_df, x='final_outcome', ax=ax1_1, width=.5,

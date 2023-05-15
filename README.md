@@ -2,7 +2,6 @@
 
 Collecting, examining, and visualizing data from my job search in 2023.
 
-***
 
 ## Visualizations
 
@@ -16,10 +15,14 @@ Collecting, examining, and visualizing data from my job search in 2023.
 ![png](/README_files/cat_compare.png)
 
 
+### [See sub-plots and more visualizations](/jupyter_notebooks/job_visualizations.ipynb)
+
+
+
 ## Python Files:
 
-[Data Functions](/py_files/data_functions.py)
+[Data Processing Functions](/py_files/data_functions.py)
 
-[Vizualization Functions](/py_files/get_df_functions.py)
+[Dataframe Functions](/py_files/get_df_functions.py)
 
-[Subplot Functions](/py_files/visualization_functions.py)
+[Vizualization Functions](/py_files/visualization_functions.py)
