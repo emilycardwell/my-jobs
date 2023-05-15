@@ -42,7 +42,7 @@ def show_initial_responses():
 
     r_df= get_ohe_df()
 
-    r_fig, ax = plt.subplots(figsize=(12,4))
+    r_fig, ax = plt.subplots(figsize=(15,4))
     cmap = lc(init_pal_list)
 
     r_fig = r_df.plot(
@@ -54,6 +54,7 @@ def show_initial_responses():
         ax=ax,
         width=.9
     )
+
     plt.xticks(rotation='horizontal')
 
     return plt.show(r_fig)
@@ -65,12 +66,9 @@ def show_outcomes():
     responses_df.index = \
         [str(pd.to_datetime(x).strftime('%b %-d')) for x in responses_df.index]
 
-    o_fig, ax = plt.subplots(figsize=(12,4))
+    o_fig, ax = plt.subplots(figsize=(15,4))
 
-    if len(responses_df.columns) == 4:
-        cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]])
-    else:
-        cmap = lc([cat_pal[0], cat_pal[3], 'maroon'])
+    cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[6], cat_pal[8]])
 
     o_fig = responses_df.plot(
         kind='bar',
@@ -101,6 +99,7 @@ def show_practice():
         ax=ax,
         width=.9
     )
+
     plt.xticks(rotation='horizontal')
 
     return plt.show(fig)
