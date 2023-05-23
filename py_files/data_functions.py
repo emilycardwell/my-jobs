@@ -115,8 +115,8 @@ def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='job
 '''
 UTILS
 '''
-def get_app_info(pattern, file_name='jobs'):
-    jobs_df = read_df(file_name)
+def get_app_info(pattern):
+    jobs_df = read_df('jobs')
     l = pattern.lower()
     u = pattern.upper()
     c = pattern.capitalize()
@@ -129,26 +129,26 @@ def add_row(new_row, file_name='jobs', on='company_name'):
     sorted_df = full_df.sort_values(on).reset_index(drop=True)
     return sorted_df
 
-def check_reg(a_index):
-    l = len(list(a_index))
+def check_company_name(app_index):
+    l = len(list(app_index))
     if l == 0:
         print("Error with company name: returned 0 rows")
         return -1
     elif l > 1:
         print(f"ATTENTION, company name returned {l} rows")
-        for x in a_index:
-            print(read_df().loc[x, ['date_applied', 'company_name', 'job_title']])
-        idx = int(input('which row (name) would you like to choose? (-1 for none)'))
+        df = read_df('jobs')
+        display(df.iloc[app_index[0]:app_index[-1]+1])
+        idx = int(input('which row (index no.) would you like to choose? (-1 for none)'))
         return idx
     else:
         return 1
 
-def update_add(idx, app, cols, data, file_name='jobs'):
+def update_add(idx, app, cols, data):
 
     for i, c in enumerate(cols):
         app.loc[c] = data[i]
 
-    old_jobs_df = read_df(file_name)
+    old_jobs_df = read_df('jobs')
     old_jobs_df.loc[idx] = app
     new_jobs_df = add_to_json(old_jobs_df, idx=idx)
 
@@ -182,11 +182,10 @@ def add_app(date_applied, company_name, job_title, job_cat, department,
 # ADD INITIAL RESPONSE
 def add_init_response(company_name_like,
                       date_init_resp, initial_response,
-                      date_interview1=None, interview1_details=None,
-                      file_name='jobs'):
+                      date_interview1=None, interview1_details=None):
 
-    app = get_app_info(company_name_like, file_name)
-    cr = check_reg(app.index)
+    app = get_app_info(company_name_like)
+    cr = check_company_name(app.index)
     if cr == -1:
         return
     elif cr != 1:
@@ -208,16 +207,15 @@ def add_init_response(company_name_like,
     else:
         return "Error, invalid initial response (Passed/Rejected)"
 
-    return update_add(idx, row, cols, data, file_name)
+    return update_add(idx, row, cols, data)
 
 
 # ADD MORE INTERVIEW NOTES/DATES
 def add_more_ints(company_name_like, int_no,
-                  date_interview, interview_details,
-                  file_name='jobs'):
+                  date_interview, interview_details):
 
-    app = get_app_info(company_name_like, file_name)
-    cr = check_reg(app.index)
+    app = get_app_info(company_name_like)
+    cr = check_company_name(app.index)
     if cr == -1:
         return
     elif cr != 1:
@@ -229,14 +227,13 @@ def add_more_ints(company_name_like, int_no,
     cols = [f'date_interview{int_no}', f'interview{int_no}_details']
     data = [date_interview, interview_details]
 
-    return update_add(idx, row, cols, data, file_name)
+    return update_add(idx, row, cols, data)
 
 # ADD FINAL RESPONSE
-def add_final_outcome(company_name_like, final_outcome, feedback,
-                      file_name='jobs'):
+def add_final_outcome(company_name_like, final_outcome, feedback):
 
-    app = get_app_info(company_name_like, file_name)
-    cr = check_reg(app.index)
+    app = get_app_info(company_name_like)
+    cr = check_company_name(app.index)
     if cr == -1:
         return
     elif cr != 1:
@@ -252,7 +249,7 @@ def add_final_outcome(company_name_like, final_outcome, feedback,
     cols = ['final_outcome', 'feedback']
     data = [final_outcome, feedback]
 
-    return update_add(idx, row, cols, data, file_name)
+    return update_add(idx, row, cols, data)
 
 
 # ADD PREP DATA
@@ -280,3 +277,30 @@ def add_work(new_data):
     new_df = add_to_json(work_df, file_name='work')
 
     return new_df.info(verbose=False)
+
+
+# EDIT DF
+def edit_df(column, new_info, company_name_like=None, idx=None, file_name='jobs'):
+
+    if company_name_like != None:
+        app = get_app_info(company_name_like)
+        cr = check_company_name(app.index)
+        if cr == -1:
+            return
+        elif cr != 1:
+            row = app.loc[cr]
+        else:
+            row = app.loc[app.index[0]]
+
+        idx = row.name
+        cols = [column]
+        data = [new_info]
+
+        return update_add(idx, row, cols, data)
+
+    if idx != None:
+        old_df = read_df(file_name)
+        old_df[column] = new_info
+        new_df = add_to_json(old_df, idx=idx)
+
+        return old_df.compare(new_df)
