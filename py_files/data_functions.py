@@ -15,10 +15,13 @@ today = date.today().strftime("%Y-%m-%d")
 '''
 READING & WRITING TO JSON
 '''
-def read_df(file_name='jobs'):
-    file_path = data_path + file_name + '.json'
+def read_df(folder_name='jobs'):
+    folder_path = f'{data_path}{folder_name}/'
+    folder_contents = sorted(os.listdir(folder_path))
+    file = folder_contents[-1]
+    file_path = folder_path + file
     try:
-        new_df = pd.read_json(file_path, orient='table')
+        new_df = pd.read_json(file_path, orient='table', convert_dates=False)
     except FileNotFoundError:
         new_df = pd.DataFrame()
 
@@ -48,31 +51,29 @@ def verify_data(new_df, old_fpath):
                 print("Incorrect input value")
                 return -1
     else:
-        print("No older files found.")
         return 1
 
-def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='jobs'):
-
-    # # add final outcomes
-    # outcomes_ser = get_outcomes(new_df).final_outcome.sort_index()
-    # new_df.loc[:, 'final_outcome'] = outcomes_ser
+def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, folder_name='jobs'):
 
     # verify data
-    old_fpath = data_path + file_name + '.json'
+    folder_path = f'{data_path}{folder_name}/'
+    file = os.listdir(folder_path)[-1]
+    old_fpath = folder_path + file
     verify = verify_data(new_df, old_fpath)
     if verify == -1:
-        return "Write to json stopped"
+        return "Write to json stopped; values/rows deleted"
+    if verify == 1:
+        return "No older files found."
 
     # create filepath
-    if verify == 1:
-        fname = file_name + '.json'
     else:
-        fname = file_name + '_new' + '.json'
-    filepath = data_path + fname
+        filepath = f'{folder_path}{file[:-6]}{int(file[-6])+1}.json'
 
     # verify file path
-    if os.path.exists(filepath):
-        return f"File Error. Please rename {filepath}."
+    print(f'The new file path is: {filepath}')
+    path = input("Continue? (y/n): ")
+    if path == 'n':
+        return -1
 
     # load df to json
     result = new_df.to_json(orient='table')
@@ -86,10 +87,6 @@ def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='job
     # read from json
     new_json_df = pd.read_json(filepath, orient='table')
 
-    # return if no older file exists
-    if verify == 1:
-        return new_json_df
-
     # show new row
     if idx:
         display(new_json_df.loc[idx])
@@ -97,17 +94,6 @@ def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='job
         display(new_json_df.loc[new_json_df['company_name'] == comp_name])
     elif date_comp == 'date_completed':
         display(new_json_df.loc[new_json_df['date_completed'] == date_comp])
-
-    # verify overwrite older file
-    y = input("Would you like to overwrite the old file? (y/n): ")
-    if y == 'y':
-        os.rename(filepath, old_fpath)
-        print('file renamed: ', old_fpath)
-    else:
-        new_fname = input("New file name: ")
-        new_fpath = data_path + new_fname + '.json'
-        os.rename(filepath, new_fpath)
-        print('file renamed: ', new_fpath)
 
     return new_json_df
 
@@ -123,8 +109,8 @@ def get_app_info(pattern):
     app_df = jobs_df.loc[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
     return app_df
 
-def add_row(new_row, file_name='jobs', on='company_name'):
-    old_df = read_df(file_name)
+def add_row(new_row, folder_name='jobs', on='company_name'):
+    old_df = read_df(folder_name)
     full_df = pd.concat([old_df, new_row])
     sorted_df = full_df.sort_values(on).reset_index(drop=True)
     return sorted_df
@@ -261,26 +247,38 @@ def add_prep(new_data, date=today):
         r.append(date)
 
     new_row = pd.DataFrame([new_data], columns=prep_cols)
-    prep_df = add_row(new_row, "prep", 'date_completed')
-    new_df = add_to_json(prep_df, date_comp='date_completed', file_name='prep')
+    prep_df = add_row(new_row, folder_name="prep", on='date')
+    new_df = add_to_json(prep_df, date_comp=date, folder_name='prep')
+
+    if new_df == -1:
+        return f"Filepath Error."
 
     return new_df.info(verbose=False)
 
 
 # ADD WORK DATA
-def add_work(new_data):
+def add_work(new_data, date=None):
 
-    work_cols = ['job', 'category', 'date_of_job']
+    work_cols = ['job', 'category', 'date']
+    data = new_data.copy()
 
-    new_row = pd.DataFrame(new_data, columns=work_cols)
-    work_df = add_row(new_row, file_name="work", on='date_of_job')
-    new_df = add_to_json(work_df, file_name='work')
+    if date:
+        data.append(date)
+    else:
+        data.append(today)
+
+    new_row = pd.DataFrame([data], columns=work_cols)
+    work_df = add_row(new_row, folder_name="work", on='date')
+    new_df = add_to_json(work_df, date_comp=date, folder_name='work')
+
+    if new_df == -1:
+        return f"Filepath Error."
 
     return new_df.info(verbose=False)
 
 
 # EDIT DF
-def edit_df(column, new_info, company_name_like=None, idx=None, file_name='jobs'):
+def edit_df(column, new_info, company_name_like=None, idx=None, folder_name='jobs'):
 
     if company_name_like != None:
         app = get_app_info(company_name_like)
@@ -299,7 +297,7 @@ def edit_df(column, new_info, company_name_like=None, idx=None, file_name='jobs'
         return update_add(idx, row, cols, data)
 
     if idx != None:
-        old_df = read_df(file_name)
+        old_df = read_df(folder_name)
         old_df[column] = new_info
         new_df = add_to_json(old_df, idx=idx)
 

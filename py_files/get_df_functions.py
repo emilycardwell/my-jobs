@@ -117,9 +117,9 @@ def get_slim_prep_df():
 
     df = read_df('prep').drop(columns='site')
 
-    grouped_df = df.groupby('date_completed').count().reset_index()
+    grouped_df = df.groupby('date').count().reset_index()
 
-    dates = grouped_df.date_completed.values
+    dates = grouped_df.date.values
 
     prep_df = pd.DataFrame({"Coding Practice": list(grouped_df["submissions"])},
                            index=dates)
@@ -131,9 +131,9 @@ def get_work_df():
 
     df = read_df('work').drop(columns='category')
 
-    grouped_df = df.groupby('date_of_job').count().reset_index()
+    grouped_df = df.groupby('date').count().reset_index()
 
-    dates = grouped_df.date_of_job.values
+    dates = grouped_df.date.values
 
     work_df = pd.DataFrame({"Work": list(grouped_df["job"])}, index=dates)
 
