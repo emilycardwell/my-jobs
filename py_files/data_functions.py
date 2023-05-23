@@ -51,7 +51,7 @@ def verify_data(new_df, old_fpath):
         print("No older files found.")
         return 1
 
-def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='jobs'):
+def add_to_json(new_df, idx=None, comp_name=None, date=None, file_name='jobs'):
 
     # # add final outcomes
     # outcomes_ser = get_outcomes(new_df).final_outcome.sort_index()
@@ -95,8 +95,8 @@ def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, file_name='job
         display(new_json_df.loc[idx])
     if comp_name:
         display(new_json_df.loc[new_json_df['company_name'] == comp_name])
-    elif date_comp == 'date_completed':
-        display(new_json_df.loc[new_json_df['date_completed'] == date_comp])
+    if date:
+        display(new_json_df.loc[new_json_df['date'] == date])
 
     # verify overwrite older file
     y = input("Would you like to overwrite the old file? (y/n): ")
@@ -261,20 +261,20 @@ def add_prep(new_data, date=today):
         r.append(date)
 
     new_row = pd.DataFrame([new_data], columns=prep_cols)
-    prep_df = add_row(new_row, "prep", 'date_completed')
-    new_df = add_to_json(prep_df, date_comp='date_completed', file_name='prep')
+    prep_df = add_row(new_row, file_name='prep', on='date')
+    new_df = add_to_json(prep_df, date=date, file_name='prep')
 
     return new_df.info(verbose=False)
 
 
 # ADD WORK DATA
-def add_work(new_data):
+def add_work(new_data, date=today):
 
-    work_cols = ['job', 'category', 'date_of_job']
+    work_cols = ['job', 'category', 'date']
 
     new_row = pd.DataFrame(new_data, columns=work_cols)
-    work_df = add_row(new_row, file_name="work", on='date_of_job')
-    new_df = add_to_json(work_df, file_name='work')
+    work_df = add_row(new_row, file_name="work", on='date')
+    new_df = add_to_json(work_df, date=date, file_name='work')
 
     return new_df.info(verbose=False)
 
@@ -300,7 +300,7 @@ def edit_df(column, new_info, company_name_like=None, idx=None, file_name='jobs'
 
     if idx != None:
         old_df = read_df(file_name)
-        old_df[column] = new_info
-        new_df = add_to_json(old_df, idx=idx)
+        old_df.loc[idx, column] = new_info
+        new_df = add_to_json(old_df, idx=idx, file_name=file_name)
 
         return old_df.compare(new_df)
