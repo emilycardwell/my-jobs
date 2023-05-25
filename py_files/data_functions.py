@@ -366,6 +366,16 @@ def verify_consolidate():
     for f in folders:
         old_df = read_df(folder_name=f, file=f'{f}1')
         new_df = read_df(f)
-        break
+        old_path = f'{data_path}{f}/{f}1.json'
 
-    return old_df.compare(new_df)
+        verify = verify_data(new_df, old_path)
+        if verify == -1:
+            return "Write to json stopped; values/rows deleted"
+        if verify == 1:
+            return "No older files found."
+
+        diff_df = pd.concat([old_df,new_df]).drop_duplicates(keep=False)
+        print("data added:")
+        display(diff_df)
+
+    return
