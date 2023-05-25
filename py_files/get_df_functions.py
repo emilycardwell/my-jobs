@@ -27,11 +27,14 @@ def get_slim_cats():
             cat_ser.iloc[x] = 'Data An.'
         # elif 'Python' in cat_ser[x]:
         #     cat_ser.iloc[x] = 'Software'
+        elif 'Technical Writer' == cat_ser[x]:
+            cat_ser.iloc[x] = 'Tech Writer'
+        elif 'Backend' in cat_ser[x]:
+            cat_ser.iloc[x] = 'Bknd Engr.'
         elif 'Engineer' in cat_ser[x]:
             cat_ser.iloc[x] = cat_ser[x].replace('Engineer', 'Engr.')
 
     return cat_ser.sort_values()
-
 
 def get_ohe_df():
 
@@ -97,10 +100,10 @@ def get_prep_df():
 
     df = read_df('prep').drop(columns='submissions')
 
-    dates = sorted(list(set(df.date_completed)))
+    dates = sorted(list(set(df.date)))
     f_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in dates]
 
-    grouped_df = df.groupby('date_completed').value_counts().unstack(fill_value=0)
+    grouped_df = df.groupby('date').value_counts().unstack(fill_value=0)
 
     cols = sorted(list(df.site.unique()))
     keys = [x.replace("_", "").capitalize() for x in cols]

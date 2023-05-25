@@ -141,27 +141,28 @@ def show_subplt():
     X = loc_df.join(cat_ser).join(out_df).drop(columns="date_applied")
 
     # set figure
-    fig = plt.figure(constrained_layout=True, figsize=(20,10))
-    spec = gs.GridSpec(ncols=3, nrows=2, figure=fig)
-    ax1 = fig.add_subplot(spec[0, 0:1])
-    ax1_1 = fig.add_subplot(spec[0, 1:])
-    ax2 = fig.add_subplot(spec[1, 0:1])
-    ax2_2 = fig.add_subplot(spec[1, 1:])
+    fig = plt.figure(constrained_layout=True, figsize=(25,10))
+    mosaic = """
+            abbb
+            cddd
+            """
+    ax_dict = fig.subplot_mosaic(mosaic)
 
     # location plot (basic)
-    sns.countplot(ax=ax1, x=loc_df.location, palette='magma')
-    ax1.set_title('Job Location Counts')
-    ax1.set_xlabel('')
+    sns.countplot(ax=ax_dict['a'], x=loc_df.location, palette='magma')
+    ax_dict['a'].set_title('Job Location Counts')
+    ax_dict['a'].set_xlabel('')
 
-    # category plot
-    sns.countplot(ax=ax1_1, x=cat_ser, palette='magma')
-    ax1_1.set_title('Job Type Counts')
-    ax1_1.set_xlabel('')
+    # category plot (basic)
+    sns.countplot(ax=ax_dict['b'], x=cat_ser, palette='magma',
+                  order = cat_ser.value_counts().index)
+    ax_dict['b'].set_title('Job Type Counts')
+    ax_dict['b'].set_xlabel('')
 
     # location plot (by initial response)
     sns.countplot(
         data=X,
-        ax=ax2,
+        ax=ax_dict['c'],
         x="location",
         hue="final_outcome",
         palette=init_pal_list,
@@ -169,24 +170,25 @@ def show_subplt():
         # saturation=1
     )
 
-    ax2.set_title('Location & Outcomes')
-    ax2.set_xlabel('')
-    ax2.legend(loc='upper right')
+    ax_dict['c'].set_title('Location & Outcomes')
+    ax_dict['c'].set_xlabel('')
+    ax_dict['c'].legend(loc='upper right')
 
     # category plot (by initial response)
     sns.countplot(
         data=X.sort_values('job_cat'),
-        ax=ax2_2,
+        ax=ax_dict['d'],
         x="job_cat",
         hue="final_outcome",
+        order = cat_ser.value_counts().index,
         palette=init_pal_list,
         width=.5,
         # saturation=1
     )
 
-    ax2_2.set_title('Job Type & Outcomes')
-    ax2_2.set_xlabel('')
-    ax2_2.legend(loc='best')
+    ax_dict['d'].set_title('Job Type & Outcomes')
+    ax_dict['d'].set_xlabel('')
+    ax_dict['d'].legend(loc='best')
 
     return plt.show()
 

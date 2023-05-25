@@ -15,17 +15,35 @@ today = date.today().strftime("%Y-%m-%d")
 '''
 READING & WRITING TO JSON
 '''
-def read_df(folder_name='jobs'):
+def read_df(folder_name='jobs', file=None):
+
+    if file != None:
+        file_path = f'{data_path}{folder_name}/{file}.json'
+        try:
+            new_df = pd.read_json(file_path, orient='table', convert_dates=False)
+            return new_df
+        except FileNotFoundError:
+            return "FileNotFound Error"
+
     folder_path = f'{data_path}{folder_name}/'
-    folder_contents = sorted(os.listdir(folder_path))
-    file = folder_contents[-1]
-    file_path = folder_path + file
+    folder_contents = os.listdir(folder_path)
+
+    versions = []
+    for file in folder_contents:
+        v = int(file[4:-5])
+        versions.append(v)
+    last_ver = sorted(versions)[-1]
+
+    last_file = f'{file[:4]}{last_ver}.json'
+    file_path = folder_path + last_file
+
     try:
         new_df = pd.read_json(file_path, orient='table', convert_dates=False)
+        return new_df
     except FileNotFoundError:
-        new_df = pd.DataFrame()
+        return "FileNotFound Error"
 
-    return new_df
+
 
 def verify_data(new_df, old_fpath):
     if os.path.exists(old_fpath):
@@ -57,22 +75,43 @@ def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, folder_name='j
 
     # verify data
     folder_path = f'{data_path}{folder_name}/'
-    file = os.listdir(folder_path)[-1]
-    old_fpath = folder_path + file
+    folder_contents = os.listdir(folder_path)
+    versions = []
+    for file in folder_contents:
+        v = int(file[4:-5])
+        versions.append(v)
+    last_ver = sorted(versions)[-1]
+
+    last_file = f'{file[:4]}{last_ver}.json'
+    old_fpath = folder_path + last_file
+
     verify = verify_data(new_df, old_fpath)
     if verify == -1:
         return "Write to json stopped; values/rows deleted"
     if verify == 1:
         return "No older files found."
 
-    # create filepath
-    else:
-        filepath = f'{folder_path}{file[:-6]}{int(file[-6])+1}.json'
-
     # verify file path
-    print(f'The new file path is: {filepath}')
-    path = input("Continue? (y/n): ")
-    if path == 'n':
+    print(f'The latest file is: {last_file}')
+    cont = input("Continue? (y/n): ")
+    if cont == 'y':
+        pass
+    else:
+        return -1
+
+    gen = input("Auto-generate a new file? (y/n): ")
+    if gen == 'y':
+        filepath = f'{folder_path}{last_file[:4]}{int(last_file[4:-5])+1}.json'
+    elif gen == 'n':
+        inp = input("Would you like to overwrite the last file? (y/n): ")
+        if inp == 'y':
+            filepath = old_fpath
+        elif inp == 'n':
+            new_file_name = input("Enter your new file name (ex: test): ")
+            filepath = f'{folder_path}{new_file_name}.json'
+        else:
+            return -1
+    else:
         return -1
 
     # load df to json
@@ -106,7 +145,7 @@ def get_app_info(pattern):
     l = pattern.lower()
     u = pattern.upper()
     c = pattern.capitalize()
-    app_df = jobs_df.loc[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
+    app_df = jobs_df[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
     return app_df
 
 def add_row(new_row, folder_name='jobs', on='company_name'):
@@ -118,7 +157,6 @@ def add_row(new_row, folder_name='jobs', on='company_name'):
 def check_company_name(app_index):
     l = len(list(app_index))
     if l == 0:
-        print("Error with company name: returned 0 rows")
         return -1
     elif l > 1:
         print(f"ATTENTION, company name returned {l} rows")
@@ -134,9 +172,14 @@ def update_add(idx, app, cols, data):
     for i, c in enumerate(cols):
         app.loc[c] = data[i]
 
+    display(pd.DataFrame(app).T)
+
     old_jobs_df = read_df('jobs')
     old_jobs_df.loc[idx] = app
     new_jobs_df = add_to_json(old_jobs_df, idx=idx)
+
+    if type(new_jobs_df) == int:
+        return "add_to_json was stopped due to user input"
 
     return old_jobs_df.compare(new_jobs_df)
 
@@ -160,8 +203,13 @@ def add_app(date_applied, company_name, job_title, job_cat, department,
     ]
 
     new_row = pd.DataFrame([data], columns=app_columns)
+    display(new_row)
+
     new_jobs_df = add_row(new_row)
     jobs_json_df = add_to_json(new_jobs_df, comp_name=company_name)
+
+    if type(jobs_json_df) == int:
+        return "add_to_json was stopped due to user input"
 
     return jobs_json_df.info(verbose=False)
 
@@ -171,9 +219,10 @@ def add_init_response(company_name_like,
                       date_interview1=None, interview1_details=None):
 
     app = get_app_info(company_name_like)
+
     cr = check_company_name(app.index)
     if cr == -1:
-        return
+        return "Error with company name: returned 0 rows"
     elif cr != 1:
         row = app.loc[cr]
     else:
@@ -193,7 +242,9 @@ def add_init_response(company_name_like,
     else:
         return "Error, invalid initial response (Passed/Rejected)"
 
-    return update_add(idx, row, cols, data)
+    new_row = update_add(idx, row, cols, data)
+
+    return new_row
 
 
 # ADD MORE INTERVIEW NOTES/DATES
@@ -203,7 +254,7 @@ def add_more_ints(company_name_like, int_no,
     app = get_app_info(company_name_like)
     cr = check_company_name(app.index)
     if cr == -1:
-        return
+        return "Error with company name: returned 0 rows"
     elif cr != 1:
         row = app.loc[cr]
     else:
@@ -221,7 +272,7 @@ def add_final_outcome(company_name_like, final_outcome, feedback):
     app = get_app_info(company_name_like)
     cr = check_company_name(app.index)
     if cr == -1:
-        return
+        return "Error with company name: returned 0 rows"
     elif cr != 1:
         row = app.loc[cr]
     else:
@@ -250,8 +301,8 @@ def add_prep(new_data, date=today):
     prep_df = add_row(new_row, folder_name="prep", on='date')
     new_df = add_to_json(prep_df, date_comp=date, folder_name='prep')
 
-    if new_df == -1:
-        return f"Filepath Error."
+    if type(new_df) == int:
+        return "add_to_json was stopped due to user input"
 
     return new_df.info(verbose=False)
 
@@ -271,8 +322,8 @@ def add_work(new_data, date=None):
     work_df = add_row(new_row, folder_name="work", on='date')
     new_df = add_to_json(work_df, date_comp=date, folder_name='work')
 
-    if new_df == -1:
-        return f"Filepath Error."
+    if type(new_df) == int:
+        return "add_to_json was stopped due to user input"
 
     return new_df.info(verbose=False)
 
@@ -284,7 +335,7 @@ def edit_df(column, new_info, company_name_like=None, idx=None, folder_name='job
         app = get_app_info(company_name_like)
         cr = check_company_name(app.index)
         if cr == -1:
-            return
+            return "Error with company name: returned 0 rows"
         elif cr != 1:
             row = app.loc[cr]
         else:
@@ -301,4 +352,20 @@ def edit_df(column, new_info, company_name_like=None, idx=None, folder_name='job
         old_df[column] = new_info
         new_df = add_to_json(old_df, idx=idx)
 
+        if type(new_df) == int:
+            return "add_to_json was stopped due to user input"
+
         return old_df.compare(new_df)
+
+
+# VERIFY DATA FILES AND CONSOLIDATE
+def verify_consolidate():
+
+    folders = ['jobs', 'work', 'prep']
+
+    for f in folders:
+        old_df = read_df(folder_name=f, file=f'{f}1')
+        new_df = read_df(f)
+        break
+
+    return old_df.compare(new_df)
