@@ -379,3 +379,4 @@ def verify_consolidate():
         display(diff_df)
 
     return
+
