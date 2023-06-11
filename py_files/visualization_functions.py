@@ -16,7 +16,7 @@ from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
 
 
 ''' GLOBAL VARIABLES'''
-jobs_df = read_df()
+jobs_df = read_df("jobs")
 cat_pal = sns.color_palette('viridis', 9, desat=.75)
 init_pal_list = [cat_pal[0], cat_pal[3], cat_pal[6]]
 cat_cols = ['job_cat', 'location', 'department', 'recruiter',

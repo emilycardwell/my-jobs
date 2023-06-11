@@ -15,7 +15,7 @@ today = date.today().strftime("%Y-%m-%d")
 '''
 READING & WRITING TO JSON
 '''
-def read_df(folder_name='jobs', file=None):
+def read_df(folder_name, file=None):
 
     if file != None:
         file_path = f'{data_path}{folder_name}/{file}.json'
@@ -71,7 +71,7 @@ def verify_data(new_df, old_fpath):
     else:
         return 1
 
-def add_to_json(new_df, idx=None, comp_name=None, date_comp=None, folder_name='jobs'):
+def add_to_json(new_df, folder_name, idx=None, comp_name=None, date_comp=None):
 
     # verify data
     folder_path = f'{data_path}{folder_name}/'
@@ -148,7 +148,7 @@ def get_app_info(pattern):
     app_df = jobs_df[jobs_df['company_name'].str.contains(f'{l}|{u}|{c}')]
     return app_df
 
-def add_row(new_row, folder_name='jobs', on='company_name'):
+def add_row(new_row, folder_name, on='company_name'):
     old_df = read_df(folder_name)
     full_df = pd.concat([old_df, new_row])
     sorted_df = full_df.sort_values(on).reset_index(drop=True)
@@ -176,7 +176,7 @@ def update_add(idx, app, cols, data):
 
     old_jobs_df = read_df('jobs')
     old_jobs_df.loc[idx] = app
-    new_jobs_df = add_to_json(old_jobs_df, idx=idx)
+    new_jobs_df = add_to_json(old_jobs_df, "jobs", idx=idx)
 
     if type(new_jobs_df) == int:
         return "add_to_json was stopped due to user input"
@@ -205,8 +205,8 @@ def add_app(date_applied, company_name, job_title, job_cat, department,
     new_row = pd.DataFrame([data], columns=app_columns)
     display(new_row)
 
-    new_jobs_df = add_row(new_row)
-    jobs_json_df = add_to_json(new_jobs_df, comp_name=company_name)
+    new_jobs_df = add_row(new_row, 'jobs')
+    jobs_json_df = add_to_json(new_jobs_df, "jobs", comp_name=company_name)
 
     if type(jobs_json_df) == int:
         return "add_to_json was stopped due to user input"
@@ -298,8 +298,8 @@ def add_prep(new_data, date=today):
         r.append(date)
 
     new_row = pd.DataFrame([new_data], columns=prep_cols)
-    prep_df = add_row(new_row, folder_name="prep", on='date')
-    new_df = add_to_json(prep_df, date_comp=date, folder_name='prep')
+    prep_df = add_row(new_row, "prep", on='date')
+    new_df = add_to_json(prep_df, "prep", date_comp=date)
 
     if type(new_df) == int:
         return "add_to_json was stopped due to user input"
@@ -319,8 +319,8 @@ def add_work(new_data, date=None):
         data.append(today)
 
     new_row = pd.DataFrame([data], columns=work_cols)
-    work_df = add_row(new_row, folder_name="work", on='date')
-    new_df = add_to_json(work_df, date_comp=date, folder_name='work')
+    work_df = add_row(new_row, "work", on='date')
+    new_df = add_to_json(work_df, "work", date_comp=date)
 
     if type(new_df) == int:
         return "add_to_json was stopped due to user input"
@@ -329,7 +329,7 @@ def add_work(new_data, date=None):
 
 
 # EDIT DF
-def edit_df(column, new_info, company_name_like=None, idx=None, folder_name='jobs'):
+def edit_df(column, new_info, folder_name, company_name_like=None, idx=None):
 
     if company_name_like != None:
         app = get_app_info(company_name_like)
@@ -349,8 +349,8 @@ def edit_df(column, new_info, company_name_like=None, idx=None, folder_name='job
 
     if idx != None:
         old_df = read_df(folder_name)
-        old_df[column] = new_info
-        new_df = add_to_json(old_df, idx=idx)
+        old_df.loc[idx][column] = new_info
+        new_df = add_to_json(old_df, folder_name, idx=idx)
 
         if type(new_df) == int:
             return "add_to_json was stopped due to user input"
@@ -379,4 +379,3 @@ def verify_consolidate():
         display(diff_df)
 
     return
-

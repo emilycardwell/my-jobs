@@ -11,7 +11,7 @@ from py_files.data_functions import read_df
 
 
 ''' GLOBAL VARIABLES '''
-jobs_df = read_df()
+jobs_df = read_df("jobs")
 unique_dates = sorted(list(set(jobs_df.date_applied)))
 string_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in unique_dates]
 
@@ -71,7 +71,7 @@ def get_location_df():
 
     return X
 
-def get_outcomes(jobs_df=read_df()):
+def get_outcomes():
     slim_df = jobs_df.loc[:, ['date_applied', 'final_outcome']]
     outcomes_df = slim_df.sort_values('date_applied')
     return outcomes_df
