@@ -5,6 +5,8 @@ GET ALL GRAPHS AS SUBPLOTS
 ''' IMPORTS '''
 import pandas as pd
 import numpy as np
+from IPython.display import display
+
 # from sklearn.preprocessing import LabelEncoder
 
 from py_files.data_functions import read_df
@@ -81,20 +83,22 @@ def get_responses():
     df = get_outcomes()
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
-    all_keys = ['No Response', 'Immediate Rejection', 'Rejected Post-Interview',
-                    'In Interviews', 'Offer']
+    all_keys = ['No Response', 'Immediate Rejection', 'Rejected Post-Interview', 'In Interviews',
+                #'Offer'
+                ]
 
     keys = list(grouped_df.keys())
     nan_keys = list(set(all_keys) - set(keys))
+    yes_keys = list(set(all_keys) - set(nan_keys))
 
-    available_df = pd.DataFrame({x: list(grouped_df[x]) for x in keys}, index=unique_dates)
+    available_df = pd.DataFrame({x: list(grouped_df[x]) for x in yes_keys}, index=unique_dates)
 
     if nan_keys:
         nan_df = pd.DataFrame({x: len(available_df)*[0] for x in nan_keys}, index=unique_dates)
+        responses_df = pd.concat([available_df, nan_df], axis=1)
+        return responses_df
 
-    responses_df = pd.concat([available_df, nan_df], axis=1)
-
-    return responses_df
+    return available_df
 
 def get_prep_df():
 

@@ -1,5 +1,6 @@
 ''' IMPORTS '''
 import pandas as pd
+from IPython.display import display
 
 import matplotlib.dates as mpld
 import matplotlib.pyplot as plt
@@ -204,8 +205,8 @@ def show_timeline():
     ax1 = fig.add_subplot(spec[0, 0:3])
     ax1_1 = fig.add_subplot(spec[0, 3])
 
-    cat_pal_list = [cat_pal[0], cat_pal[1], cat_pal[3],
-                    cat_pal[7], cat_pal[8],
+    cat_pal_list = [cat_pal[0], cat_pal[3], cat_pal[6],
+                    cat_pal[8], # "gold",
                     "thistle", "lightsteelblue"]
 
     t_accum = [0] * len(feats)
@@ -233,7 +234,9 @@ def show_timeline():
 
     totals_df = get_outcomes()
     sns.countplot(totals_df, x='final_outcome', ax=ax1_1, width=.5,
-                  palette=cat_pal_list)
+                  palette=[cat_pal[0], cat_pal[3], cat_pal[6],
+                    cat_pal[8]], order=['No Response', 'Immediate Rejection', 'Rejected Post-Interview',
+                    'In Interviews'])
     ax1_1.set_title('Job Application Outcomes')
     ax1_1.set_label(totals_df.final_outcome)
     ax1_1.set_xlabel('')
