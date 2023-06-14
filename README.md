@@ -6,13 +6,22 @@ Collecting, examining, and visualizing data from my job search in 2023.
 ## Visualizations
 
 #### Timeline and Outcomes
-![png](/README_files/timeline)
+![png](/README_files/timeline5.png)
 
-#### Comparing job location and job category to initial response
-![png](/README_files/location_type_outcomes.png)
+#### Comparing job category to initial response
+![png](/README_files/cats1.png)
 
-#### Comparing all categorical features to final outcomes
-![png](/README_files/cat_compare.png)
+#### Final Outcomes
+![png](/README_files/tree.png)
+
+#### Comparing categorical features to final outcomes
+![png](/README_files/cat_compare1.png)
+
+#### Comparing Features of Jobs
+![png](/README_files/jobs1.png)
+
+#### Comparing Features of Work and Prep
+![png](/README_files/work_prep1.png)
 
 
 ### [See sub-plots and more visualizations](/jupyter_notebooks/job_visualizations.ipynb)
