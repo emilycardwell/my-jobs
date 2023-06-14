@@ -1,40 +1,50 @@
 ''' IMPORTS '''
 import pandas as pd
+import numpy as np
 from IPython.display import display
 
 import matplotlib.dates as mpld
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gs
+import squarify
 from matplotlib.colors import ListedColormap as lc
+from matplotlib.colors import LinearSegmentedColormap as lscm
 import seaborn as sns
+from matplotlib.ticker import MaxNLocator
 sns.set_theme(style='white')
 
 from py_files.data_functions import read_df
-from py_files.get_df_functions import get_slim_cats, get_ohe_df, \
+from py_files.get_df_functions import get_slim_cats, get_init_responses, \
                                         get_responses, get_encoded_cols, \
                                         get_location_df, get_timeline_df, \
-                                        get_outcomes, get_prep_df, get_work_df
+                                        get_outcomes, get_prep_df, get_work_df, \
+                                        get_work_col, get_ohe_df
 
 
 ''' GLOBAL VARIABLES'''
 jobs_df = read_df("jobs")
-cat_pal = sns.color_palette('viridis', 9, desat=.75)
-init_pal_list = [cat_pal[0], cat_pal[3], cat_pal[6]]
-cat_cols = ['job_cat', 'location', 'department', 'recruiter',
-            'referral', 'method', 'date_applied']
-hue_order = ['Immediate Rejection', 'No Response', 'Rejected Post-Interview',
-             'In Interviews']
+cat_pal = sns.color_palette('viridis', 10, desat=.75)
+init_pal_list = ['maroon', 'silver', cat_pal[7]]
+outcomes_pal = ['maroon', 'silver', cat_pal[3], cat_pal[9], #'gold'
+                ]
+hue_order = ['Rejection', 'No Response', 'No Offer',
+             'In Interviews', #'Offer'
+             ]
 
 '''
 SINGLE GRAPHS
 '''
 def show_job_categories():
     cat_slim_ser = get_slim_cats()
-    fig, ax = plt.subplots(figsize=(10,4))
+
+    fig, ax = plt.subplots(figsize=(15,5))
     fig = sns.countplot(x=cat_slim_ser, palette='magma')
+
     ax.set_title('Job Category Counts')
     ax.set_xlabel('Category')
-    plt.xticks(rotation=45)
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.set_ylim(top=20)
+    plt.xticks(rotation=20)
 
     return plt.show(fig)
 
@@ -43,7 +53,7 @@ def show_initial_responses():
 
     r_df= get_ohe_df()
 
-    r_fig, ax = plt.subplots(figsize=(15,4))
+    r_fig, ax = plt.subplots(figsize=(15,5))
     cmap = lc(init_pal_list)
 
     r_fig = r_df.plot(
@@ -56,6 +66,7 @@ def show_initial_responses():
         width=.9
     )
 
+    ax.xaxis.set_major_locator(mpld.DayLocator(interval=3))
     plt.xticks(rotation='horizontal')
 
     return plt.show(r_fig)
@@ -67,9 +78,9 @@ def show_outcomes():
     responses_df.index = \
         [str(pd.to_datetime(x).strftime('%b %-d')) for x in responses_df.index]
 
-    o_fig, ax = plt.subplots(figsize=(15,4))
+    o_fig, ax = plt.subplots(figsize=(15,5))
 
-    cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[6], cat_pal[8]])
+    cmap = lc(outcomes_pal)
 
     o_fig = responses_df.plot(
         kind='bar',
@@ -81,6 +92,7 @@ def show_outcomes():
         width=.9
     )
 
+    ax.xaxis.set_major_locator(mpld.DayLocator(interval=3))
     plt.xticks(rotation='horizontal')
 
     return plt.show(o_fig)
@@ -89,18 +101,23 @@ def show_practice():
 
     prep_df = get_prep_df()
 
-    fig, ax = plt.subplots(figsize=(15,4))
+    fig, ax = plt.subplots(figsize=(15,5))
+
+    colors = ['wheat', '#eba9ae', 'thistle']
+    nodes = [0.0, 0.5, 1.0]
+    cmap = lscm.from_list("mycmap", list(zip(nodes, colors)))
 
     fig = prep_df.plot(
         kind='bar',
-        colormap=lc(['silver', 'wheat', 'lightgrey', 'thistle']),
+        colormap=cmap,
         stacked=True,
         xlabel='Date Completed',
         title='Coding Practice Problems',
         ax=ax,
-        width=.9
+        width=1
     )
 
+    ax.xaxis.set_major_locator(mpld.DayLocator(interval=3))
     plt.xticks(rotation='horizontal')
 
     return plt.show(fig)
@@ -109,24 +126,46 @@ def show_work():
 
     work_df = get_work_df()
 
-    fig, ax = plt.subplots(figsize=(15,4))
+    fig, ax = plt.subplots(figsize=(15,5))
+
+    colors = ["#cff075", "#88d1aa", "#78d2de", "#b9b7ed"]
+    nodes = [0.0, 0.33, 0.66, 1.0]
+    cmap = lscm.from_list("mycmap", list(zip(nodes, colors)))
 
     fig = work_df.plot(
         kind='bar',
-        colormap=lc(['lightsteelblue']),
+        colormap=cmap,
         stacked=True,
         xlabel='Date Completed',
         title='Coding Practice Problems',
         ax=ax,
-        width=.9
+        width=1
     )
 
-    xform = mpld.DateFormatter('%b %-d')
-    ax.xaxis.set_major_formatter(xform)
-    ax.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
+    ax.xaxis.set_major_locator(mpld.DayLocator(interval=5))
     ax.set_ylim(top=5)
 
     plt.xticks(rotation='horizontal')
+
+    return plt.show(fig)
+
+def show_work_categories():
+    work_df = get_work_col('category')
+    fig, ax = plt.subplots(figsize=(10,5))
+    fig = sns.countplot(x=work_df, palette='Blues')
+    ax.set_title('Work Category Counts')
+    ax.set_xlabel('Category')
+    plt.xticks(rotation='horizontal')
+
+    return plt.show(fig)
+
+def show_work_projects():
+    work_df = get_work_col('job')
+    fig, ax = plt.subplots(figsize=(15,5))
+    fig = sns.countplot(x=work_df, palette='Greens')
+    ax.set_title('Work Projects')
+    ax.set_xlabel('Project')
+    plt.xticks(rotation=20)
 
     return plt.show(fig)
 
@@ -134,65 +173,6 @@ def show_work():
 '''
 MULTIPLOTS
 '''
-def show_subplt():
-
-    cat_ser = get_slim_cats()
-    loc_df = get_location_df()
-    out_df = get_outcomes()
-    X = loc_df.join(cat_ser).join(out_df).drop(columns="date_applied")
-
-    # set figure
-    fig = plt.figure(constrained_layout=True, figsize=(25,10))
-    mosaic = """
-            abbb
-            cddd
-            """
-    ax_dict = fig.subplot_mosaic(mosaic)
-
-    # location plot (basic)
-    sns.countplot(ax=ax_dict['a'], x=loc_df.location, palette='magma')
-    ax_dict['a'].set_title('Job Location Counts')
-    ax_dict['a'].set_xlabel('')
-
-    # category plot (basic)
-    sns.countplot(ax=ax_dict['b'], x=cat_ser, palette='magma',
-                  order = cat_ser.value_counts().index)
-    ax_dict['b'].set_title('Job Type Counts')
-    ax_dict['b'].set_xlabel('')
-
-    # location plot (by initial response)
-    sns.countplot(
-        data=X,
-        ax=ax_dict['c'],
-        x="location",
-        hue="final_outcome",
-        palette=init_pal_list,
-        width=.5,
-        # saturation=1
-    )
-
-    ax_dict['c'].set_title('Location & Outcomes')
-    ax_dict['c'].set_xlabel('')
-    ax_dict['c'].legend(loc='upper right')
-
-    # category plot (by initial response)
-    sns.countplot(
-        data=X.sort_values('job_cat'),
-        ax=ax_dict['d'],
-        x="job_cat",
-        hue="final_outcome",
-        order = cat_ser.value_counts().index,
-        palette=init_pal_list,
-        width=.5,
-        # saturation=1
-    )
-
-    ax_dict['d'].set_title('Job Type & Outcomes')
-    ax_dict['d'].set_xlabel('')
-    ax_dict['d'].legend(loc='best')
-
-    return plt.show()
-
 # timeline
 def show_timeline():
 
@@ -200,19 +180,20 @@ def show_timeline():
     feats = tl_df.reset_index(drop=True)
     x = list(tl_df.index)
 
-    fig = plt.figure(constrained_layout=True, figsize=(25,6))
-    spec = gs.GridSpec(ncols=4, nrows=1, figure=fig)
-    ax1 = fig.add_subplot(spec[0, 0:3])
-    ax1_1 = fig.add_subplot(spec[0, 3])
+    cols = hue_order.copy()
+    cols.append('Coding Practice')
+    cols.append('Work')
 
-    cat_pal_list = [cat_pal[0], cat_pal[3], cat_pal[6],
-                    cat_pal[8], # "gold",
-                    "thistle", "lightsteelblue"]
+    timeline_pal = outcomes_pal.copy()
+    timeline_pal.append('thistle')
+    timeline_pal.append("lightsteelblue")
+
+    fig, ax = plt.subplots(figsize=(20,5))
 
     t_accum = [0] * len(feats)
 
-    for col, color in zip(feats.columns, cat_pal_list):
-        ax1.bar(
+    for col, color in zip(cols, timeline_pal):
+        ax.bar(
             x=pd.to_datetime(x),
             height=feats[col],
             bottom=t_accum,
@@ -223,78 +204,232 @@ def show_timeline():
         t_accum += feats[col]
 
     xform = mpld.DateFormatter('%b %-d')
-    ax1.xaxis.set_major_formatter(xform)
-    ax1.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
-    ax1.set_xlabel('Date Applied or Practice Problem Completed')
+    ax.xaxis.set_major_formatter(xform)
+    ax.xaxis.set_major_locator(mpld.DayLocator(bymonthday=[1,15]))
+    ax.set_xlabel('Date Applied or Practice Problem Completed')
 
-    ax1.set_ylim(top=10.5)
-    ax1.set_ylabel('Count')
-    ax1.set_title('Timeline of Job Applications and Coding Practice')
-    ax1.legend(loc='upper center')
-
-    totals_df = get_outcomes()
-    sns.countplot(totals_df, x='final_outcome', ax=ax1_1, width=.5,
-                  palette=[cat_pal[0], cat_pal[3], cat_pal[6],
-                    cat_pal[8]], order=['No Response', 'Immediate Rejection', 'Rejected Post-Interview',
-                    'In Interviews'])
-    ax1_1.set_title('Job Application Outcomes')
-    ax1_1.set_label(totals_df.final_outcome)
-    ax1_1.set_xlabel('')
+    ax.set_ylim(top=10.5)
+    ax.set_ylabel('')
+    ax.set_title('Timeline of Job Applications and Coding Practice')
+    ax.legend(loc='upper right')
 
     return plt.show(fig)
+
+
+def show_cats():
+
+    cat_ser = get_slim_cats()
+    out_df = get_init_responses()
+    X = out_df.join(cat_ser) #.drop(columns="date_applied")
+
+    # set figure
+    sns.set_style("whitegrid", {})
+    fig, ax = plt.subplots(figsize=(7,15))
+
+    # category plot (by initial response)
+    sns.countplot(
+        data=X.sort_values('job_cat'),
+        ax=ax,
+        y="job_cat",
+        hue="initial_response",
+        order = cat_ser.value_counts().index,
+        palette=init_pal_list,
+        width=.5,
+        # saturation=1
+    )
+
+    ax.set_title('Job Type & Outcomes')
+    ax.set_ylabel('')
+    ax.legend(loc='best')
+
+    return plt.show()
+
+def tree():
+    fig = plt.figure(figsize=(15, 5))
+    outcomes_df = get_outcomes()
+    squarify.plot(
+        sizes=outcomes_df['final_outcome'].value_counts(),
+        color=outcomes_pal, label=hue_order
+        )
+    plt.title("Outcomes")
+    plt.axis("off")
+
+    return plt.show()
+
+def show_cat_compare():
+
+    df = get_encoded_cols()
+
+    columns = ['department', 'recruiter', 'referral',
+               'method', 'location']
+    subs = ['a', 'b', 'c', 'd', 'e']
+
+    # set figure
+    sns.set_style("whitegrid")
+    fig = plt.figure(constrained_layout=True, figsize=(10,10))
+    mosaic = """
+            abc
+            ddd
+            eee
+            """
+    ax_dict = fig.subplot_mosaic(mosaic)
+
+    for col, sub in zip(columns, subs):
+        if col == 'final_outcome':
+            squarify.plot(
+                # df[col].value_counts()
+                sizes=[30,20,10,5], color=outcomes_pal,
+                label=hue_order, ax=ax_dict[sub], pad=True
+                )
+            ax_dict[sub].set_title("outcome")
+            ax_dict[sub].tick_params(axis='both', which='both', labelleft=False,
+                                     labelbottom=False)
+        else:
+            sns.countplot(
+            data=df, x=col, hue='final_outcome', hue_order=hue_order,
+            palette=outcomes_pal, ax=ax_dict[sub]
+            )
+            ax_dict[sub].set_title(col)
+        ax_dict[sub].set_xlabel("")
+        ax_dict[sub].set_ylim(top=40)
+        ax_dict[sub].grid(False,'major','both')
+        if sub != 'a' and sub != 'd' and sub != 'e':
+            ax_dict[sub].set_ylabel("")
+            ax_dict[sub].tick_params(axis='y', which='both', labelleft=False)
+        if sub != 'e':
+            ax_dict[sub].get_legend().remove()
+
+    return plt.show(fig)
+
+def jobs_multiplot():
+
+    cat_slim_ser = get_slim_cats()
+    r_df= get_ohe_df()
+    responses_df = get_responses()
+    responses_df.index = \
+        [str(pd.to_datetime(x).strftime('%b %-d')) for x in responses_df.index]
+
+    # set figure
+    sns.set_style("whitegrid")
+    fig = plt.figure(constrained_layout=True, figsize=(15,15))
+    mosaic = """
+            aaa
+            bbb
+            ccc
+            """
+    ax_dict = fig.subplot_mosaic(mosaic)
+
+    # categories
+    sns.countplot(ax=ax_dict['a'], x=cat_slim_ser, palette='magma')
+    ax_dict['a'].set_title('Job Category Counts')
+    ax_dict['a'].set_xlabel('Category')
+    ax_dict['a'].yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax_dict['a'].set_ylim(top=20)
+    ax_dict['a'].tick_params(labelrotation=20)
+    ax_dict['a'].grid(False, 'both', 'both')
+
+    # initial responses
+    cmap = lc(init_pal_list)
+    r_df.plot(
+        kind='bar',
+        colormap=cmap,
+        stacked=True,
+        xlabel='Date Applied',
+        title='Initial Responses by Date',
+        ax=ax_dict['b'],
+        width=.9
+    )
+    ax_dict['b'].xaxis.set_major_locator(mpld.DayLocator(interval=3))
+    ax_dict['b'].tick_params(labelrotation=0)
+    ax_dict['b'].grid(False, 'both', 'both')
+
+    # outcomes
+    cmap = lc([cat_pal[0], cat_pal[3], 'maroon', cat_pal[6], cat_pal[8]])
+    responses_df.plot(
+        kind='bar',
+        colormap=cmap,
+        stacked=True,
+        xlabel='Date Applied',
+        title='Final Outcomes by Date',
+        ax=ax_dict['c'],
+        width=.9
+    )
+    ax_dict['c'].xaxis.set_major_locator(mpld.DayLocator(interval=3))
+    ax_dict['c'].tick_params(labelrotation=0)
+    ax_dict['c'].grid(False, 'both', 'both')
+
+    return plt.show()
+
+def work_prep_multiplot():
+
+    prep_df = get_prep_df()
+    work_df = get_work_df()
+    cat_df = get_work_col('category')
+    proj_df = get_work_col('job')
+
+    # set figure
+    sns.set_style("whitegrid")
+    fig = plt.figure(constrained_layout=True, figsize=(25,10))
+    mosaic = """
+            aac
+            bbd
+            """
+    ax_dict = fig.subplot_mosaic(mosaic)
+
+    # prep
+    colors = ['wheat', '#eba9ae', 'thistle']
+    nodes = [0.0, 0.5, 1.0]
+    cmap = lscm.from_list("mycmap", list(zip(nodes, colors)))
+    prep_df.plot(
+        kind='bar',
+        colormap=cmap,
+        stacked=True,
+        xlabel='Date Completed',
+        title='Coding Practice Problems',
+        ax=ax_dict['a'],
+        width=1
+    )
+    ax_dict['a'].xaxis.set_major_locator(mpld.DayLocator(interval=3))
+    ax_dict['a'].tick_params(labelrotation=0)
+    ax_dict['a'].grid(False, 'both', 'x')
+
+    # work
+    colors = ["#cff075", "#88d1aa", "#78d2de", "#b9b7ed"]
+    nodes = [0.0, 0.33, 0.66, 1.0]
+    cmap = lscm.from_list("mycmap", list(zip(nodes, colors)))
+    work_df.plot(
+        kind='bar',
+        colormap=cmap,
+        stacked=True,
+        xlabel='Date Completed',
+        title='Coding Practice Problems',
+        ax=ax_dict['b'],
+        width=1
+    )
+
+    ax_dict['b'].xaxis.set_major_locator(mpld.DayLocator(interval=5))
+    ax_dict['b'].set_ylim(top=5)
+    ax_dict['b'].tick_params(labelrotation=0)
+    ax_dict['b'].grid(False, 'both', 'x')
+
+    # work cats
+    sns.countplot(x=cat_df, palette='Blues', ax=ax_dict['c'])
+    ax_dict['c'].set_title('Work Category Counts')
+    ax_dict['c'].set_xlabel('Category')
+    ax_dict['c'].tick_params(labelrotation=0)
+
+    # work projects
+    fig = sns.countplot(x=proj_df, palette='Greens', ax=ax_dict['d'])
+    ax_dict['d'].set_title('Work Projects')
+    ax_dict['d'].set_xlabel('Project')
+    ax_dict['d'].tick_params(labelrotation=20)
+
+    return plt.show()
 
 
 '''
 DATA EXPLORATION
 '''
-def show_cat_compare(columns=cat_cols):
-
-    df = get_encoded_cols()
-    myVars = locals()
-
-    fig_rows = 0
-    fig_cols = 0
-    for c in columns:
-        if c == cat_cols[0] or c == cat_cols[1] or c == cat_cols[-1]:
-            fig_rows += 1
-        else:
-            fig_cols += 1
-    if fig_cols:
-        fig_rows += 1
-
-    fig = plt.figure(constrained_layout=True, figsize=(20,15))
-    spec = gs.GridSpec(ncols=max(1, fig_cols), nrows=fig_rows, figure=fig)
-    outcomes_pal = [cat_pal[0], cat_pal[3], 'maroon', cat_pal[8]]
-
-    r = 0
-    k = 0
-    for i in range(len(columns)):
-        ax = f'ax{i}'
-        c = columns[i]
-
-        if c == cat_cols[0] or c == cat_cols[1] or c == cat_cols[-1]:
-            myVars[ax] = fig.add_subplot(spec[r, :])
-            r += 1
-        else:
-            myVars[ax] = fig.add_subplot(spec[r, k])
-            k += 1
-            if k == fig_cols:
-                r += 1
-                k = 0
-
-        sns.countplot(
-            data=df, x=c, hue='final_outcome', hue_order=hue_order,
-            palette=outcomes_pal, ax=myVars[ax]
-        )
-        myVars[ax].set_title(c)
-        myVars[ax].set_xlabel("")
-        if r != 1:
-            myVars[ax].legend_ = None
-
-    return plt.show(fig)
-
-
-
 def show_cat_ref():
 
     X = jobs_df.loc[:, ['job_cat', 'location', 'initial_response']]

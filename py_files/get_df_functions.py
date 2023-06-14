@@ -38,6 +38,31 @@ def get_slim_cats():
 
     return cat_ser.sort_values()
 
+def get_location_df():
+
+    X = jobs_df.loc[:, ['location']]
+
+    for idx, r in X.location.items():
+        if 'remote' in r.lower():
+            X.loc[idx, 'location'] = 'Remote'
+        elif 'Germany' in r:
+            X.loc[idx, 'location'] = 'Germany'
+        elif 'Austria' in r:
+            X.loc[idx, 'location'] = 'Austria'
+        elif 'Copenhagen' in r:
+            X.loc[idx, 'location'] = 'Copenhagen'
+        elif "Berlin" in r:
+            X.loc[idx, 'location'] = 'Berlin'
+        else:
+            X.loc[idx, 'location'] = 'Other'
+
+    return X
+
+def get_init_responses():
+    slim_df = jobs_df.loc[:, ['date_applied', 'initial_response']]
+    outcomes_df = slim_df.sort_values('date_applied').drop(columns='date_applied')
+    return outcomes_df
+
 def get_ohe_df():
 
     X = jobs_df.loc[:, ['date_applied', 'initial_response']]
@@ -51,27 +76,9 @@ def get_ohe_df():
         'Passed': list(gb_df['Passed'])
     }
 
-    r_df = pd.DataFrame(data=r_dict, index=string_dates)
+    r_df = pd.DataFrame(data=r_dict, index=string_dates).reset_index(drop=True)
 
     return r_df
-
-def get_location_df():
-
-    X = jobs_df.loc[:, ['location']]
-
-    for idx, r in X.location.items():
-        if 'remote' in r.lower():
-            X.loc[idx, 'location'] = 'Remote'
-        elif 'Germany' in r:
-            X.loc[idx, 'location'] = 'Germany'
-        elif 'Austria' in r:
-            X.loc[idx, 'location'] = 'Austria'
-        elif "Berlin" in r:
-            X.loc[idx, 'location'] = 'Berlin'
-        else:
-            X.loc[idx, 'location'] = 'Other'
-
-    return X
 
 def get_outcomes():
     slim_df = jobs_df.loc[:, ['date_applied', 'final_outcome']]
@@ -83,7 +90,7 @@ def get_responses():
     df = get_outcomes()
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
-    all_keys = ['No Response', 'Immediate Rejection', 'Rejected Post-Interview', 'In Interviews',
+    all_keys = ['No Response', 'Rejection', 'No Offer', 'In Interviews',
                 #'Offer'
                 ]
 
@@ -119,7 +126,6 @@ def get_prep_df():
 
     return prep_df
 
-
 def get_slim_prep_df():
 
     df = read_df('prep').drop(columns='site')
@@ -133,15 +139,36 @@ def get_slim_prep_df():
 
     return prep_df
 
+def get_work_col(column):
+
+    work_df = read_df('work')[column]
+
+    return work_df
 
 def get_work_df():
 
     df = read_df('work').drop(columns='category')
 
+    dates = sorted(list(set(df.date)))
+    f_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in dates]
+
+    grouped_df = df.groupby('date').value_counts().unstack(fill_value=0)
+
+    cols = sorted(list(df.job.unique()))
+    keys = [x.capitalize() for x in cols]
+
+    work_df = pd.DataFrame(
+        {keys[x]: list(grouped_df[cols[x]]) for x in range(len(cols))},
+        index=f_dates
+    )
+
+    return work_df
+
+def get_slim_work_df():
+
+    df = read_df('work').drop(columns='category')
     grouped_df = df.groupby('date').count().reset_index()
-
     dates = grouped_df.date.values
-
     work_df = pd.DataFrame({"Work": list(grouped_df["job"])}, index=dates)
 
     return work_df
@@ -150,7 +177,7 @@ def get_timeline_df():
 
     rdf = get_responses()
     pdf = get_slim_prep_df()
-    wdf = get_work_df()
+    wdf = get_slim_work_df()
 
     jdf = pd.merge(rdf, pdf, how='outer', left_index=True, right_index=True)
     jdf2 = pd.merge(jdf, wdf, how='outer', left_index=True, right_index=True)
@@ -163,25 +190,26 @@ def get_timeline_df():
 
 def get_encoded_cols():
     # slice and binary features
-    bi_columns = ['department', 'recruiter', 'referral', 'method']
+    bi_columns = ['department', 'recruiter', 'referral']
     X = jobs_df.loc[:, bi_columns].copy()
 
     # custom encode binary features
-    X.loc[X['method'] != 'linkedin', 'method'] = 'Referral/Web'
-
-    X.loc[X['department'].isna(), 'department'] = 'Company-Wide'
-    X.loc[X['department'] != 'Company-Wide', 'department'] = 'Smaller Department'
+    X.loc[X['department'].isna(), 'department'] = 'Company'
+    X.loc[X['department'] != 'Company', 'department'] = 'Department'
 
     for c in ['recruiter', 'referral']:
-        X.loc[X[c].isna(), c] = "No"
-        X.loc[X[c] != "No", c] = "Yes"
+        X.loc[X[c].isna(), c] = f"No {c}"
+        X.loc[X[c] != f"No {c}", c] = f"{c.capitalize()}"
 
     # add named categorical features
-    X1 = get_location_df()
-    cats = get_slim_cats()
-    outcomes = get_outcomes()
+    X1 = jobs_df.loc[:, ['method']].copy()
+    for x in ['linkedin', 'stepstone', 'indeed']:
+        X1.loc[X1['method'] == x, 'method'] = 'Platform'
 
-    df = X.join(cats).join(X1).join(outcomes)
+    outcomes = get_outcomes().drop(columns='date_applied')
+    loc_df = get_location_df()
+
+    df = X.join(X1).join(loc_df).join(outcomes)
 
     return df
 
@@ -201,6 +229,8 @@ unused code for label encoder
     #         y[idx] = 0
     #     else:
     #         y[idx] = 1
+
+
 
 '''
 replaced with shorter code

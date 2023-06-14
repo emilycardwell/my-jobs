@@ -181,7 +181,9 @@ def update_add(idx, app, cols, data):
     if type(new_jobs_df) == int:
         return "add_to_json was stopped due to user input"
 
-    return old_jobs_df.compare(new_jobs_df)
+    display(old_jobs_df.compare(new_jobs_df))
+
+    return "Finished"
 
 
 '''
@@ -230,9 +232,9 @@ def add_init_response(company_name_like,
 
     idx = row.name
 
-    if initial_response == 'Rejected':
+    if initial_response == 'Rejection':
         cols = ['date_init_resp', 'initial_response', 'final_outcome']
-        data = [date_init_resp, initial_response, 'Immediate Rejection']
+        data = [date_init_resp, initial_response, 'Rejection']
 
     elif initial_response == 'Passed':
         cols = ['date_init_resp', 'initial_response',
@@ -240,7 +242,7 @@ def add_init_response(company_name_like,
         data = [date_init_resp, initial_response,
                 date_interview1, interview1_details, 'In Interviews']
     else:
-        return "Error, invalid initial response (Passed/Rejected)"
+        return "Error, invalid initial response (Passed/Rejection)"
 
     new_row = update_add(idx, row, cols, data)
 
@@ -278,9 +280,9 @@ def add_final_outcome(company_name_like, final_outcome, feedback):
     else:
         row = app.loc[app.index[0]]
 
-    while final_outcome not in ['Rejected Post-Interview', 'Offer']:
+    while final_outcome not in ['No Offer', 'Offer']:
         final_outcome = input("Error, invalid final outcome. Enter valid response: \
-             (Rejected Post-Interview/Offer)")
+             (No Offer/Offer)")
 
     idx = row.name
     cols = ['final_outcome', 'feedback']
@@ -292,12 +294,12 @@ def add_final_outcome(company_name_like, final_outcome, feedback):
 # ADD PREP DATA
 def add_prep(new_data, date=today):
 
-    prep_cols = ['site', 'submissions']
+    prep_cols = ['site', 'submissions', 'date']
 
     for r in new_data:
         r.append(date)
 
-    new_row = pd.DataFrame([new_data], columns=prep_cols)
+    new_row = pd.DataFrame(new_data, columns=prep_cols)
     prep_df = add_row(new_row, "prep", on='date')
     new_df = add_to_json(prep_df, "prep", date_comp=date)
 
@@ -329,7 +331,8 @@ def add_work(new_data, date=None):
 
 
 # EDIT DF
-def edit_df(column, new_info, folder_name, company_name_like=None, idx=None):
+def edit_df(column, new_info, folder_name, rows_to_delete=None,
+            company_name_like=None, idx=None, old_info=None):
 
     if company_name_like != None:
         app = get_app_info(company_name_like)
@@ -341,6 +344,9 @@ def edit_df(column, new_info, folder_name, company_name_like=None, idx=None):
         else:
             row = app.loc[app.index[0]]
 
+        print("The old data is: ", row)
+        print("The new data is: ", new_info)
+
         idx = row.name
         cols = [column]
         data = [new_info]
@@ -349,13 +355,54 @@ def edit_df(column, new_info, folder_name, company_name_like=None, idx=None):
 
     if idx != None:
         old_df = read_df(folder_name)
+        print("The old data is: ", old_df.loc[idx][column])
         old_df.loc[idx][column] = new_info
+        print("The new data is: ", old_df.loc[idx][column])
         new_df = add_to_json(old_df, folder_name, idx=idx)
 
         if type(new_df) == int:
             return "add_to_json was stopped due to user input"
 
-        return old_df.compare(new_df)
+        display(old_df.compare(new_df))
+
+        return "Finished!"
+
+    if rows_to_delete != None:
+        old_df = read_df(folder_name)
+
+        start_idx = rows_to_delete[0]
+        end_idx = rows_to_delete[-1] + 1
+
+        display(old_df[start_idx:end_idx])
+        conf = input('really delete rows: (y/n) ')
+        if conf == 'y':
+            old_df = old_df.drop(rows_to_delete).reset_index(drop=True)
+            new_df = add_to_json(old_df, folder_name)
+            display(old_df.compare(new_df))
+            return "Finished!"
+
+        return "Cancelled"
+
+    if old_info != None:
+        old_df = read_df(folder_name)
+        old_col = old_df[column]
+        print("The old data is: ", old_info, "and the new info is: ", new_info)
+
+        for i, v in old_col.items():
+            if old_info in v:
+                old_col[i] = v.replace(old_info, new_info)
+
+        old_df[column] = old_col
+        new_df = add_to_json(old_df, folder_name)
+
+        if type(new_df) == int:
+            return "add_to_json was stopped due to user input"
+
+        display(old_df.compare(new_df))
+
+        return "Finished!"
+
+    return "Error, one of the Keyword args must be given"
 
 
 # VERIFY DATA FILES AND CONSOLIDATE
