@@ -416,13 +416,15 @@ def work_prep_multiplot():
     sns.countplot(x=cat_df, palette='Blues', ax=ax_dict['c'])
     ax_dict['c'].set_title('Work Category Counts')
     ax_dict['c'].set_xlabel('Category')
-    ax_dict['c'].tick_params(labelrotation=0)
+    ax_dict['c'].tick_params(labelrotation=0, labelsize=8)
 
     # work projects
     fig = sns.countplot(x=proj_df, palette='Greens', ax=ax_dict['d'])
     ax_dict['d'].set_title('Work Projects')
     ax_dict['d'].set_xlabel('Project')
-    ax_dict['d'].tick_params(labelrotation=20)
+    ax_dict['d'].tick_params(labelrotation=20, labelsize=8)
+
+
 
     return plt.show()
 
@@ -470,3 +472,9 @@ def show_pair():
         kind='hist'
     )
     return plt.show(fig)
+
+
+if __name__ == '__main__':
+    dec = input('would you like to print the visualizations? (y/n)')
+    if dec == 'y':
+        work_prep_multiplot()

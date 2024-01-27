@@ -1,12 +1,14 @@
 ''' IMPORTS '''
 import pandas as pd
 import json
+from dotenv import load_dotenv
 import os
 from datetime import date
 from IPython.display import display
 
 
 ''' GLOBAL VARIABLES'''
+load_dotenv()
 data_path = os.getenv('DATA_PATH')
 index_cols = ['company_name', 'date_applied']
 today = date.today().strftime("%Y-%m-%d")
