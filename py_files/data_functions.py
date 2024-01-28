@@ -1,5 +1,6 @@
 ''' IMPORTS '''
 import pandas as pd
+pd.options.mode.copy_on_write = True
 import json
 from dotenv import load_dotenv
 import os
@@ -30,8 +31,13 @@ def read_df(folder_name, file=None):
     folder_path = f'{data_path}{folder_name}/'
     folder_contents = os.listdir(folder_path)
 
+    if len(folder_contents) == 0 or folder_contents == ['.DS_Store']:
+        return "No files found in folder, please add some data!"
+
     versions = []
     for file in folder_contents:
+        if file == '.DS_Store':
+            continue
         v = int(file[4:-5])
         versions.append(v)
     last_ver = sorted(versions)[-1]
@@ -80,6 +86,8 @@ def add_to_json(new_df, folder_name, idx=None, comp_name=None, date_comp=None):
     folder_contents = os.listdir(folder_path)
     versions = []
     for file in folder_contents:
+        if file == '.DS_Store':
+            continue
         v = int(file[4:-5])
         versions.append(v)
     last_ver = sorted(versions)[-1]
@@ -296,13 +304,13 @@ def add_final_outcome(company_name_like, final_outcome, feedback):
 # ADD PREP DATA
 def add_prep(new_data, date=today):
 
-    prep_cols = ['site', 'submissions', 'date']
+    prep_cols = ['site', 'submissions', 'date_completed']
 
     for r in new_data:
         r.append(date)
 
     new_row = pd.DataFrame(new_data, columns=prep_cols)
-    prep_df = add_row(new_row, "prep", on='date')
+    prep_df = add_row(new_row, "prep", on='date_completed')
     new_df = add_to_json(prep_df, "prep", date_comp=date)
 
     if type(new_df) == int:
@@ -312,9 +320,9 @@ def add_prep(new_data, date=today):
 
 
 # ADD WORK DATA
-def add_work(new_data, date=None):
+def add_work(new_data, date=today):
 
-    work_cols = ['job', 'category', 'date']
+    work_cols = ['job', 'category', 'date_completed']
     data = new_data.copy()
 
     if date:
@@ -323,7 +331,7 @@ def add_work(new_data, date=None):
         data.append(today)
 
     new_row = pd.DataFrame([data], columns=work_cols)
-    work_df = add_row(new_row, "work", on='date')
+    work_df = add_row(new_row, "work", on='date_completed')
     new_df = add_to_json(work_df, "work", date_comp=date)
 
     if type(new_df) == int:

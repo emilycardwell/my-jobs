@@ -1,31 +1,19 @@
-# Job Application Data
+# Job Applications, Interview Prep, and Freelance Work from Jan - June 2023
+Emily Cardwell
+***
 
 Collecting, examining, and visualizing data from my job search in 2023.
 
-
-## Visualizations
-
-#### Timeline and Outcomes
-![png](/README_files/timeline5.png)
-
-#### Comparing job category to initial response
-![png](/README_files/cats1.png)
-
-#### Final Outcomes
-![png](/README_files/tree.png)
-
-#### Comparing categorical features to final outcomes
-![png](/README_files/cat_compare1.png)
-
-#### Comparing Features of Jobs
-![png](/README_files/jobs1.png)
-
-#### Comparing Features of Work and Prep
-![png](/README_files/work_prep1.png)
+### [See my jupyter notebook](/jupyter_notebooks/job_visualizations.ipynb)
 
 
-### [See sub-plots and more visualizations](/jupyter_notebooks/job_visualizations.ipynb)
+### Current Usage
 
+1. fork repository
+2. add your own .env file with PYTHONPATH (mine is /.src) and DATA_PATH (/Users/COMPUTER_USERNAME/code/GITHUB_USERNAME/my-jobs/data/ for mac)
+3. open [quick_start.ipynb](/quick_start.ipynb)
+4. start adding your job/prep/application data (if adding data, follow propts to save new or overwrite data file)
+5. when you have some data, try running the visualizations!
 
 
 ## Python Files:

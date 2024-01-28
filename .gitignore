@@ -1,6 +1,6 @@
 # Data Files
 *.json
-data/*
+data/prep_ind/*
 
 # python files
 __pycache__/

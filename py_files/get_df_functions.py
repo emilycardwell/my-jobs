@@ -17,6 +17,7 @@ jobs_df = read_df("jobs")
 unique_dates = sorted(list(set(jobs_df.date_applied)))
 string_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in unique_dates]
 
+
 ''' SHOWING GRAPHS '''
 def get_slim_cats():
 
@@ -70,6 +71,13 @@ def get_ohe_df():
 
     gb_df = X.groupby('date_applied').value_counts().unstack(fill_value=0)
 
+    if 'Rejected' not in gb_df.columns:
+        gb_df['Rejected'] = 0
+    if 'No Response' not in gb_df.columns:
+        gb_df['No Response'] = 0
+    if 'Passed' not in gb_df.columns:
+        gb_df['Passed'] = 0
+
     r_dict = {
         'Rejected': list(gb_df['Rejected']),
         'No Response': list(gb_df['No Response']),
@@ -91,7 +99,7 @@ def get_responses():
     grouped_df = df.groupby('date_applied').value_counts().unstack(fill_value=0)
 
     all_keys = ['No Response', 'Rejection', 'No Offer', 'In Interviews',
-                #'Offer'
+                'Offer'
                 ]
 
     keys = list(grouped_df.keys())
@@ -111,10 +119,10 @@ def get_prep_df():
 
     df = read_df('prep').drop(columns='submissions')
 
-    dates = sorted(list(set(df.date)))
+    dates = sorted(list(set(df.date_completed)))
     f_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in dates]
 
-    grouped_df = df.groupby('date').value_counts().unstack(fill_value=0)
+    grouped_df = df.groupby('date_completed').value_counts().unstack(fill_value=0)
 
     cols = sorted(list(df.site.unique()))
     keys = [x.replace("_", "").capitalize() for x in cols]
@@ -130,9 +138,9 @@ def get_slim_prep_df():
 
     df = read_df('prep').drop(columns='site')
 
-    grouped_df = df.groupby('date').count().reset_index()
+    grouped_df = df.groupby('date_completed').count().reset_index()
 
-    dates = grouped_df.date.values
+    dates = grouped_df.date_completed.values
 
     prep_df = pd.DataFrame({"Coding Practice": list(grouped_df["submissions"])},
                            index=dates)
@@ -149,10 +157,10 @@ def get_work_df():
 
     df = read_df('work').drop(columns='category')
 
-    dates = sorted(list(set(df.date)))
+    dates = sorted(list(set(df.date_completed)))
     f_dates = [str(pd.to_datetime(x).strftime('%b %-d')) for x in dates]
 
-    grouped_df = df.groupby('date').value_counts().unstack(fill_value=0)
+    grouped_df = df.groupby('date_completed').value_counts().unstack(fill_value=0)
 
     cols = sorted(list(df.job.unique()))
     keys = [x.capitalize() for x in cols]
@@ -167,8 +175,8 @@ def get_work_df():
 def get_slim_work_df():
 
     df = read_df('work').drop(columns='category')
-    grouped_df = df.groupby('date').count().reset_index()
-    dates = grouped_df.date.values
+    grouped_df = df.groupby('date_completed').count().reset_index()
+    dates = grouped_df.date_completed.values
     work_df = pd.DataFrame({"Work": list(grouped_df["job"])}, index=dates)
 
     return work_df
