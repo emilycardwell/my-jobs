@@ -1,0 +1,96 @@
+{
+    "schema": {
+        "fields": [
+            {
+                "name": "index",
+                "type": "integer"
+            },
+            {
+                "name": "date_applied",
+                "type": "string"
+            },
+            {
+                "name": "company_name",
+                "type": "string"
+            },
+            {
+                "name": "job_title",
+                "type": "string"
+            },
+            {
+                "name": "job_cat",
+                "type": "string"
+            },
+            {
+                "name": "department",
+                "type": "string"
+            },
+            {
+                "name": "location",
+                "type": "string"
+            },
+            {
+                "name": "recruiter",
+                "type": "number"
+            },
+            {
+                "name": "referral",
+                "type": "number"
+            },
+            {
+                "name": "method",
+                "type": "string"
+            },
+            {
+                "name": "url",
+                "type": "string"
+            },
+            {
+                "name": "date_init_resp",
+                "type": "string"
+            },
+            {
+                "name": "initial_response",
+                "type": "string"
+            },
+            {
+                "name": "date_interview1",
+                "type": "string"
+            },
+            {
+                "name": "interview1_details",
+                "type": "number"
+            },
+            {
+                "name": "date_interview2",
+                "type": "number"
+            },
+            {
+                "name": "interview2_details",
+                "type": "number"
+            },
+            {
+                "name": "date_interview3",
+                "type": "number"
+            },
+            {
+                "name": "interview3_details",
+                "type": "number"
+            },
+            {
+                "name": "final_outcome",
+                "type": "string"
+            },
+            {
+                "name": "feedback",
+                "type": "number"
+            }
+        ],
+        "primaryKey": [
+            "index"
+        ],
+        "pandas_version": "1.4.0"
+    },
+    "data": [
+    ]
+}

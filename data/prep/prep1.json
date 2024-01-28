@@ -1,0 +1,28 @@
+{
+    "schema": {
+        "fields": [
+            {
+                "name": "index",
+                "type": "integer"
+            },
+            {
+                "name": "site",
+                "type": "string"
+            },
+            {
+                "name": "submissions",
+                "type": "string"
+            },
+            {
+                "name": "date_completed",
+                "type": "string"
+            }
+        ],
+        "primaryKey": [
+            "index"
+        ],
+        "pandas_version": "1.4.0"
+    },
+    "data": [
+    ]
+}
